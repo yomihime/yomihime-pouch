@@ -22,6 +22,7 @@
 | :--- | :--- | :--- |
 | 🧭 **Interactive Planning Doc** | 把交互式讨论整理成可执行计划文档。 | [查看文档](./skills/interactive-planning-doc/) |
 | 🧵 **Auto Style String Resources** | 审计、归类并分批风格化程序字串和 UI 文案。 | [查看文档](./skills/auto-style-string-resources/) |
+| 🛠️ **Multi-agent Engineering** | 按任务选择模型，协调小切片实现、独立审查与验证。 | [查看文档](./skills/multi-agent-engineering/) |
 
 ## 🗂️ 目录结构
 
@@ -31,7 +32,8 @@ yomihime-pouch/
 ├── napcat-portable-installer/
 ├── skills/
 │   ├── auto-style-string-resources/
-│   └── interactive-planning-doc/
+│   ├── interactive-planning-doc/
+│   └── multi-agent-engineering/
 ├── README.md
 └── LICENSE
 ```

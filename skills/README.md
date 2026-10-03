@@ -7,3 +7,4 @@
 | 技能名称 | 用途 | 目录 |
 | :--- | :--- | :--- |
 | `interactive-planning-doc` | 把交互式讨论整理成可执行计划文档。 | [interactive-planning-doc](./interactive-planning-doc/) |
+| `multi-agent-engineering` | 按任务选择模型，协调小切片实现、独立审查与验证。 | [multi-agent-engineering](./multi-agent-engineering/) |
