@@ -24,6 +24,8 @@
 | 🧵 **Auto Style String Resources** | 审计、归类并分批风格化程序字串和 UI 文案。 | [查看文档](./skills/auto-style-string-resources/) |
 | 🛠️ **Multi-agent Engineering** | 按任务选择模型，协调小切片实现、独立审查与验证。 | [查看文档](./skills/multi-agent-engineering/) |
 
+| 🗃️ **Project Memory** | 维护本地私有工程记忆，按需恢复目标、架构、环境与调试进度。 | [查看文档](./skills/project-memory/) |
+
 ## 🗂️ 目录结构
 
 ```text
@@ -33,7 +35,8 @@ yomihime-pouch/
 ├── skills/
 │   ├── auto-style-string-resources/
 │   ├── interactive-planning-doc/
-│   └── multi-agent-engineering/
+│   ├── multi-agent-engineering/
+│   └── project-memory/
 ├── README.md
 └── LICENSE
 ```
