@@ -1,4 +1,4 @@
 interface:
   display_name: "Project Memory"
-  short_description: "维护项目本地工程记忆，按需恢复目标、环境、架构、约束与调试检查点"
-  default_prompt: "使用 $project-memory，检查当前项目的私有记忆与实际加载链，按本次任务恢复并增量更新已验证的信息。"
+  short_description: "维护项目本地完整当前状态快照，改写前归档历史，用短入口恢复工作"
+  default_prompt: "使用 $project-memory，核实当前项目的私有记忆与加载链，先全文读取当前快照，维护时先归档旧版再更新完整现状。"
