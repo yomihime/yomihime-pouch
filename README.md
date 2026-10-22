@@ -13,8 +13,9 @@
 
 | 名称 | 用途 | 文档 |
 | :--- | :--- | :--- |
-| 📊 **Git Commit Counter** | 统计 Git 仓库中个人的历史代码提交行数。 | [查看文档](./git-commit-counter/) |
-| 🐱 **NapCat Portable Installer** | 使用系统 QQ 部署可移动的 NapCat Shell 目录。 | [查看文档](./napcat-portable-installer/) |
+| 📊 **Git Commit Counter** | 统计 Git 仓库中个人的历史代码提交行数。 | [查看文档](./tools/git-commit-counter/) |
+| 🐱 **NapCat Portable Installer** | 使用系统 QQ 部署可移动的 NapCat Shell 目录。 | [查看文档](./tools/napcat-portable-installer/) |
+| 🎬 **Emby + MetaTube Manager** | Windows 原生 Emby + MetaTube 安装、启动、备份、升级与诊断。 | [查看文档](./tools/emby-metatube-manager/) |
 
 ### AI 技能
 
@@ -23,15 +24,16 @@
 | 🧭 **Interactive Planning Doc** | 把交互式讨论整理成可执行计划文档。 | [查看文档](./skills/interactive-planning-doc/) |
 | 🧵 **Auto Style String Resources** | 审计、归类并分批风格化程序字串和 UI 文案。 | [查看文档](./skills/auto-style-string-resources/) |
 | 🛠️ **Multi-agent Engineering** | 按任务选择模型，协调小切片实现、独立审查与验证。 | [查看文档](./skills/multi-agent-engineering/) |
-
 | 🗃️ **Project Memory** | 完整读取本地当前状态快照，改写前归档历史，用短入口恢复工作。 | [查看文档](./skills/project-memory/) |
 
 ## 🗂️ 目录结构
 
 ```text
 yomihime-pouch/
-├── git-commit-counter/
-├── napcat-portable-installer/
+├── tools/
+│   ├── git-commit-counter/
+│   ├── napcat-portable-installer/
+│   └── emby-metatube-manager/
 ├── skills/
 │   ├── auto-style-string-resources/
 │   ├── interactive-planning-doc/
