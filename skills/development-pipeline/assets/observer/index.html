@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>流水线观察台</title>
+  <!-- observer-config -->
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">◇</span><div><span class="eyebrow">LOCAL PIPELINE / OBSERVER</span><strong>流水线观察台</strong></div></div>
+    <div class="connection"><span id="connection-dot" class="dot"></span><span id="connection">正在连接</span><span id="asof">等待首次数据</span></div>
+  </header>
+  <main>
+    <section class="hero">
+      <div><div class="eyebrow">运行概览 <span id="demo" class="demo" hidden>合成演示</span></div><h1 id="title">等待流水线数据</h1><p id="project" class="muted"></p><p id="run-id" class="muted">本地只读视图</p></div>
+      <div class="hero-stats"><div><span>流水线状态</span><strong id="run-status">—</strong></div><div><span>当前轮次</span><strong id="current-round">—</strong></div><div><span>尝试次数</span><strong id="attempt">—</strong></div><div><span>事件版本</span><strong id="revision">—</strong></div></div>
+    </section>
+    <p class="notice">此页面展示已上报的事件，不探测进程，也不构成独立的通过证明。</p>
+    <section class="layout">
+      <div class="main-column">
+        <section class="panel graph-panel"><div class="panel-head"><div><span class="eyebrow">WORKFLOW</span><h2>轮次与检查点</h2><p>轮次按顺序推进，同轮任务可并行；虚线表示失败返回路径。</p></div><span class="hint">横向滚动查看全部轮次 →</span></div><div class="legend" id="legend"></div><div id="graph-scroll" class="graph-scroll" tabindex="0" aria-label="流水线图，可横向滚动"><div id="graph" class="graph"></div></div></section>
+        <section class="panel timeline-panel"><div class="panel-head"><div><span class="eyebrow">EVENT LOG</span><h2>事件时间线</h2><p>包含历史失败与特殊情况，按最新事件排列。</p></div><span id="event-count" class="count"></span></div><div id="timeline" class="timeline"></div></section>
+      </div>
+      <aside class="panel details"><div class="panel-head"><div><span class="eyebrow">INSPECTOR</span><h2>节点详情</h2><p>选择图中的任务或检查点查看上报信息。</p></div></div><div id="details-content" class="details-content"><div class="empty">尚未选择节点</div></div></aside>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "rounds": [
+    {
+      "id": "r1", "title": "需求与契约",
+      "tasks": [
+        {"id": "contract", "title": "明确接口与验收", "role": "architect", "writes": [], "resources": []}
+      ],
+      "gates": [
+        {"id": "contract-review", "title": "方案审查", "kind": "review", "return_to": "r1"}
+      ]
+    },
+    {
+      "id": "r2", "title": "并行实现",
+      "tasks": [
+        {"id": "engine", "title": "实现状态引擎", "role": "implementer", "writes": ["demo/engine"], "resources": []},
+        {"id": "observer", "title": "实现观察页面", "role": "designer", "writes": ["demo/observer"], "resources": []}
+      ],
+      "gates": [
+        {"id": "integration-test", "title": "集成测试", "kind": "test", "return_to": "r2"}
+      ]
+    },
+    {
+      "id": "r3", "title": "验收与交付",
+      "tasks": [
+        {"id": "acceptance", "title": "核对需求与候选", "role": "tester", "writes": [], "resources": []}
+      ],
+      "gates": [
+        {"id": "final-review", "title": "独立验收审查", "kind": "review", "return_to": "r2"}
+      ]
+    }
+  ]
+}

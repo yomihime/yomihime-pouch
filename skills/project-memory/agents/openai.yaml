@@ -1,4 +1,4 @@
 interface:
   display_name: "Project Memory"
-  short_description: "维护项目本地完整当前状态快照，改写前归档历史，用短入口恢复工作"
-  default_prompt: "使用 $project-memory，核实当前项目的私有记忆与加载链，先全文读取当前快照，维护时先归档旧版再更新完整现状。"
+  short_description: "按角色读取完整现状与相关地图，归并有来源的事实，维护前归档并核验"
+  default_prompt: "使用 $project-memory，按角色恢复或提取相关工程知识；维护时完整读待改内容，先归档再更新并核验。"

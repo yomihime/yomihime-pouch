@@ -1,4 +1,4 @@
 interface:
   display_name: "多 agent 工程协作"
-  short_description: "按风险与预算选择模型，组织小切片实现、独立审查和可追溯验证"
-  default_prompt: "使用 $multi-agent-engineering，先确认范围和实际可用模型，再按任务卡协调实现、验证与独立审查。"
+  short_description: "用可开工任务包与地图图纸，按依赖协调并行实现、角色互通和独立验收"
+  default_prompt: "使用 $multi-agent-engineering，复用相关地图与契约，向子任务下发可开工输入，按依赖并行并提交验证证据。"

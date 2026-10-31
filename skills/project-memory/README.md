@@ -1,26 +1,28 @@
 # project-memory
 
-项目本地工程记忆技能：用简短 AGENTS.md 引导完整读取当前状态快照，改写前归档旧版。下一次接手直接读到现状，无需从历史记录推理目标、约束、环境、架构或进度。
+维护项目本地的完整当前状态、代码地图与证据，改写前归档旧版，帮助主调度者恢复和子任务定点开工。
 
-- `AGENTS.md`：短小的稳定用户约束、必要环境边界和全文读取指令。
-- `.project-memory/current.md`：唯一完整当前快照，正文包含所有已知、仍有效的工程信息；每次开始或恢复首先全文读取。
-- `.project-memory/archive/`：每次改写前原样保存旧版，校验成功才更新；正常恢复不读取，仅用于追溯和找回旧证据。
+- `AGENTS.md`：短入口、稳定约束和按角色读取规则，保留人工指导。
+- `.project-memory/current.md`：唯一完整现状；主调度者或单 Agent 恢复时全文读取。
+- `.project-memory/references/`：按需保存代码地图、现状图纸和领域细节。
+- `.project-memory/evidence/`：按需保留支撑长期结论的原始证据。
+- `.project-memory/archive/`：改写前的原始旧版与恢复清单，正常恢复不读取。
+- `.agent-work/`：可选协作工作区，任务包、回报、检查点和临时材料不成为第二份项目现状。
 
-维护是更新完整现状，不是追加本轮摘要。旧的目标/决定、检查点等多文件结构可一次性迁移：先归档旧资料，再合并当前有效事实并更新入口。未知项和证据的实际验证日期保留，不借整理记忆扩大验证结论。
-
-把整个目录复制到你的技能目录（例如 `~/.codex/skills/project-memory/`），按当前客户端的技能发现方式加载。不会更改全局配置，也不会自动初始化当前仓库的记忆。
+普通已委派子任务取得适用约束和相关地图/图纸后定点读取，不默认重复加载全体记忆；测试、审查、维护和清理仍需各自必需材料。记忆 writer 全文读当前快照与待改文件，按已接收事实批次维护，并返回归档/核验回执。
 
 ```text
-使用 $project-memory，为这个项目初始化最小的本地工程记忆，保留人工指导。
-使用 $project-memory，只读检查当前记忆的鲜度、加载冲突和发布风险。
-使用 $project-memory，先全文读取当前快照，再继续当前修复。
-使用 $project-memory，把现有多文件记忆迁移为完整当前快照，归档旧资料并更新短入口。
+使用 $project-memory，为项目初始化最小记忆，保留人工指导。
+使用 $project-memory，恢复当前项目并为指定子任务提取相关知识。
+使用 $project-memory，只读检查地图鲜度、加载冲突和发布风险。
+使用 $project-memory，归并这些已确认事实，维护前归档并核验结果。
 ```
 
-- `SKILL.md`：操作入口与边界
-- `references/privacy-and-loading.md`：本地 exclude、已有 tracked/staged 冲突、真实加载语义与发布检查
-- `references/memory-schema.md`：短入口、完整当前快照与历史归档的结构
-- `references/maintenance.md`：全文恢复、改写前归档、旧结构迁移与行为验证
-- `agents/openai.yaml`：技能展示元数据
+- `SKILL.md`：入口、角色读取与边界。
+- `references/privacy-and-loading.md`：真实加载、本地排除与发布检查。
+- `references/memory-schema.md`：受管目录、完整当前快照和知识资料。
+- `references/maintenance.md`：归档更新、恢复与迁移。
+- `references/collaboration.md`：知识摘录、地图/图纸、事实批次与证据固化。
+- `agents/openai.yaml`：技能展示元数据。
 
-本包可提交的是通用方法。使用后生成的 AGENTS.md、override、当前快照、历史归档和缓存全部留在项目本地，不得提交或上传；已有追踪冲突需要明确处理，ignore 无法解决。不要存密钥值，归档不授权复制秘密。它不能保证启动自动执行、无限上下文或自动压缩恢复。
+通用 Skill 可分发，实际项目记忆、工作区与缓存本地私有，不提交、上传或打包。复制技能目录不会自动初始化项目、更新已有 AGENTS、安装其他 Skill 或重载当前会话；已有布局与指导需按授权兼容。单 Agent 可独立完成维护，子 Agent 非必需。

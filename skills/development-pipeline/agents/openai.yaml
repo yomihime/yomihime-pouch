@@ -1,0 +1,4 @@
+interface:
+  display_name: "开发流水线"
+  short_description: "按需求切片、轮次并行和检查点验收推进工程，以项目隔离的静态页面实时观察"
+  default_prompt: "使用 $development-pipeline，明确交付终点，将需求拆成顺序轮次、轮内并行任务和检查点；通过项目隔离的静态网页与对话汇报进度，按候选证据验收并处理失败回流，完成后停止观察刷新并保留最终报告。"
