@@ -34,7 +34,7 @@ class ProjectIndexTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.project = Path(self.temp.name) / "project"
         self.project.mkdir()
-        self.work = self.project / ".agent-work"
+        self.work = self.project / ".agent-workspace"
         self.evidence = self.project / "evidence.txt"
         self.evidence.write_text("verified", encoding="utf-8")
 
@@ -95,14 +95,129 @@ class ProjectIndexTests(unittest.TestCase):
     def test_nested_project_work_dir_is_not_indexed_by_parent(self):
         parent_run = self.init("parent")
         child_project = self.work / "nested-project"
-        child_run = child_project / ".agent-work" / "child" / "pipeline"
+        child_run = child_project / ".agent-workspace" / "child" / "pipeline"
         pipeline.mutate(child_run, "init", title="Child project", demo=False)
         pipeline.build_index(self.work)
         self.assertEqual(set(self.entries()), {"parent/pipeline"})
-        child_entries = {row["path"]: row for row in index_data(child_project / ".agent-work")["runs"]}
+        child_entries = {row["path"]: row for row in index_data(child_project / ".agent-workspace")["runs"]}
         self.assertEqual(set(child_entries), {"child/pipeline"})
         self.assertEqual(child_entries["child/pipeline"]["run_id"], pipeline.read_state(child_run)["run_id"])
         self.assertNotEqual(pipeline.read_state(parent_run)["project"]["id"], pipeline.read_state(child_run)["project"]["id"])
+        self.assertEqual(pipeline.enclosing_work_dir(parent_run), self.work)
+        self.assertEqual(pipeline.enclosing_work_dir(child_run), child_project / ".agent-workspace")
+        self.assertEqual(pipeline.read_state(child_run)["project"]["root"], str(child_project))
+
+    def test_cli_uses_only_canonical_workspace_for_lifecycle_and_index(self):
+        run = self.work / "cli" / "pipeline"
+        def cli(*args):
+            result = subprocess.run([sys.executable, "-X", "utf8", str(SCRIPT), *map(str, args)],
+                                    capture_output=True, text=True, encoding="utf-8", timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout
+
+        output = cli("init", run, "--title", "CLI lifecycle", "--demo")
+        self.assertIn(str(run / "observer" / "index.html"), output)
+        self.assertIn(f"Project index: {self.work / 'index.html'}", output)
+        self.assertEqual(pipeline.read_state(run)["project"]["root"], str(self.project))
+        self.assertEqual(self.entries()["cli/pipeline"]["revision"], 1)
+        self.complete(run)
+        journal = (run / "events.jsonl").read_bytes()
+        self.assertEqual(cli("view", run).strip(), str(run / "observer" / "index.html"))
+        self.assertEqual(cli("index", self.project).strip(), str(self.work / "index.html"))
+        self.assertEqual(self.entries()["cli/pipeline"]["status"], "completed")
+        self.assertEqual((run / "events.jsonl").read_bytes(), journal)
+        self.assertTrue((run / "report.html").is_file())
+        self.assertFalse((self.project / ".agent-work").exists())
+
+    def test_legacy_workspace_is_neither_discovered_nor_modified(self):
+        old_work = self.project / ".agent-work"
+        old_run = old_work / "old" / "pipeline"
+        old_run.mkdir(parents=True)
+        (old_run / "events.jsonl").write_text("historical contents\n", encoding="utf-8")
+        (old_work / "index.html").write_text("historical project page", encoding="utf-8")
+        before = {path.relative_to(old_work): path.read_bytes() for path in old_work.rglob("*") if path.is_file()}
+        self.assertIsNone(pipeline.enclosing_work_dir(old_run))
+        self.assertIsNone(pipeline.rebuild_enclosing_index(old_run))
+        with self.assertRaisesRegex(pipeline.PipelineError, "must be named .agent-workspace"):
+            pipeline.build_index(old_work)
+        result = subprocess.run([sys.executable, str(SCRIPT), "index", str(self.project)],
+                                capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), str(self.work / "index.html"))
+        self.assertEqual(self.entries(), {})
+        self.init("current")
+        self.assertEqual(set(self.entries()), {"current/pipeline"})
+        after = {path.relative_to(old_work): path.read_bytes() for path in old_work.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+
+    def test_arbitrary_run_directories_do_not_acquire_workspace_behavior(self):
+        for name in ("artifacts", ".agent-workspace-backup", ".agent-workspaces"):
+            with self.subTest(directory=name):
+                run = self.project / name / "run" / "pipeline"
+                pipeline.mutate(run, "init", title=name, demo=True, project_root=self.project)
+                self.assertIsNone(pipeline.enclosing_work_dir(run))
+                self.assertEqual(pipeline.read_state(run)["project"]["root"], str(self.project))
+                self.assertEqual(pipeline.build_observer(run), run / "observer" / "index.html")
+                self.assertFalse((self.project / name / "index.html").exists())
+        self.assertFalse(self.work.exists())
+        pipeline.build_index(self.work)
+        self.assertEqual(self.entries(), {})
+
+    def test_workspace_index_ignores_backups_staging_and_reserved_materials(self):
+        run = self.init("current")
+        journal = (run / "events.jsonl").read_bytes()
+        paths = [
+            "init-20261103/init/backups/current/pipeline/events.jsonl",
+            "init-20261103/init/staging/template/pipeline/events.jsonl",
+            "memory/pipeline/events.jsonl",
+            "design/pipeline/events.jsonl",
+            "plans/pipeline/events.jsonl",
+            "work/pipeline/events.jsonl",
+            "current/scratch/pipeline/events.jsonl",
+            "current/pipeline/backups/pipeline/events.jsonl",
+            "events.jsonl",
+            "noncanonical/events.jsonl",
+        ]
+        for relative in paths:
+            path = self.work / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(journal)
+        pipeline.build_index(self.work)
+        self.assertEqual(set(self.entries()), {"current/pipeline"})
+        for relative in paths:
+            path = self.work / relative
+            self.assertEqual(path.read_bytes(), journal)
+            self.assertFalse((path.parent / ".pipeline.lock").exists(), relative)
+
+    def test_explicit_noncanonical_workspace_run_keeps_its_own_views(self):
+        canonical = self.init("canonical")
+        for relative in ("custom-run", "other/deep/pipeline", "memory/pipeline"):
+            with self.subTest(path=relative):
+                run = self.work / relative
+                pipeline.mutate(run, "init", title=relative, demo=True)
+                state = pipeline.read_state(run)
+                pipeline.mutate(run, "note", entity_id=state["run_id"], note="explicit path remains usable")
+                before = (run / "events.jsonl").read_bytes()
+                self.assertEqual(pipeline.build_observer(run), run / "observer" / "index.html")
+                self.assertEqual(pipeline.read_state(run)["revision"], 2)
+                self.assertEqual((run / "events.jsonl").read_bytes(), before)
+                self.assertEqual(set(self.entries()), {"canonical/pipeline"})
+        self.assertEqual(self.entries()["canonical/pipeline"]["run_id"], pipeline.read_state(canonical)["run_id"])
+
+    def test_relocated_journal_preserves_history_without_rewriting_paths(self):
+        source = self.project / "import-source" / "pipeline"
+        pipeline.mutate(source, "init", title="Historical run", demo=True, project_root=self.project)
+        state = pipeline.read_state(source)
+        pipeline.mutate(source, "note", entity_id=state["run_id"], note="Historical project path must remain unchanged")
+        journal = (source / "events.jsonl").read_bytes()
+        target = self.work / "imported" / "pipeline"
+        target.mkdir(parents=True)
+        (target / "events.jsonl").write_bytes(journal)
+        pipeline.build_observer(target)
+        self.assertEqual((target / "events.jsonl").read_bytes(), journal)
+        self.assertEqual(pipeline.read_state(target), pipeline.read_state(source))
+        self.assertEqual(self.entries()["imported/pipeline"]["run_id"], state["run_id"])
+        self.assertEqual(self.entries()["imported/pipeline"]["revision"], 2)
 
     def test_deeply_nested_corrupt_json_is_isolated(self):
         self.init("valid")
@@ -151,6 +266,18 @@ class ProjectIndexTests(unittest.TestCase):
         pipeline.mutate(outside, "init", title="external", demo=True)
         try:
             (self.work / "linked").symlink_to(outside.parent, target_is_directory=True)
+        except OSError as error:
+            self.skipTest("symlink creation unavailable: " + str(error))
+        pipeline.build_index(self.work)
+        self.assertEqual(set(self.entries()), {"real/pipeline"})
+
+    @unittest.skipUnless(hasattr(os, "symlink"), "symlinks unavailable")
+    def test_symlinked_pipeline_directory_is_not_scanned(self):
+        run = self.init("real")
+        alias = self.work / "alias" / "pipeline"
+        alias.parent.mkdir()
+        try:
+            alias.symlink_to(run, target_is_directory=True)
         except OSError as error:
             self.skipTest("symlink creation unavailable: " + str(error))
         pipeline.build_index(self.work)

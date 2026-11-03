@@ -1,25 +1,32 @@
 # 当前状态与归档结构
 
-默认采用一份完整当前快照。未知项写“未核实”，不通过猜测填满模板；初始化前先通过隐私检查。已有兼容布局可以保留路径名，但必须让有效入口明确指向唯一完整现状，不能继续用多个阶段记录拼接状态。
+统一在 `.agent-workspace/memory/current.md` 维护一份完整当前快照。未知项写“未核实”，不通过猜测填满模板；初始化前先通过隐私检查。旧项目材料由 project-init 先盘点并安全整理，再让有效入口指向该唯一现状，不保留旧目录读取回退、双写或多个阶段记录拼接状态。
 
 ## 文件职责
 
 ```text
 AGENTS.md                         短入口：稳定约束、必要环境边界、按角色读取规则
-.project-memory/
-  current.md                      完整现状；主调度者/单 Agent 恢复时全文读取
-  references/                     按需：较长有效知识，不是第二份现状
-    code-map.md                   总代码地图：职责、入口、符号、验证与子图路由
-    architecture.md               已核验现状架构、契约和数据流图纸
-    maps/<scope-id>.md            按需：复杂领域子地图
-    drawings/<topic-id>.md        按需：独立专题图纸
-  evidence/<evidence-id>/         按需：长期结论所需的必要原始证据
-    manifest.md                   来源、候选、内容清单与必要校验值
-  archive/<时间戳>-<唯一标识>/     每次改写前保存的旧版，不默认读取
-    manifest.md                   本次归档的来源、校验值与更新原因
-    <原相对路径>                  旧文件的原始内容
-.agent-work/                     按需：协作工作材料，本地私有
+.agent-workspace/                 统一的项目本地私有材料
+  memory/
+    current.md                    完整现状；主调度者/单 Agent 恢复时全文读取
+    references/                   按需：较长有效知识，不是第二份现状
+      code-map.md                 总代码地图：职责、入口、符号、验证与子图路由
+      architecture.md             已核验现状架构、契约和数据流图纸
+      maps/<scope-id>.md          按需：复杂领域子地图
+      drawings/<topic-id>.md      按需：独立专题图纸
+    evidence/<evidence-id>/       按需：长期结论所需的必要原始证据
+      manifest.md                 来源、候选、内容清单与必要校验值
+    archive/<时间戳>-<唯一标识>/   每次改写前保存的旧版，不默认读取
+      manifest.md                 本次归档的来源、校验值与更新原因
+      <原相对路径>                旧文件的原始内容
+  design/                         按需：持久设计指南，由对应技能维护
+    ui-guide.md
+    writing-guide.md
+    resources.md
+  plans/                          按需：独立的非任务计划，不替代任务 plan.md
+  work/                           按需：不属于单一任务的临时材料，不存源码 checkout
   runtime.md                      按需：运行时能力缓存
+  index.html                      按需：事件派生的项目流水线索引
   <work-id>/
     plan.md                       本批目标、依赖、分工与验收；已有计划优先复用
     pipeline/                     按需：development-pipeline 观察器
@@ -42,9 +49,9 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
     artifacts.md                  按需：关键产物和保留去向
 ```
 
-目录图只列本方案管理的路径，按需内容不预建，不假设项目源码布局。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-work/` 实例目录仅用于中间材料，不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-work/`。已有兼容材料路径优先复用，不为了模板搬动文件。只读短任务可在会话完成，没有协作需求也不必创建 .agent-work/。
+目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 避免与 memory、design、plans、work 及已有受管文件重名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 project-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
 
-references/ 存较长知识细节，evidence/ 存长期原始依据，archive/ 存改写前的记忆旧版；任务回报和临时材料留工作区。恢复必需的目标、约束、核心架构、结果与下一步仍直接写在 current.md。工作区计划描述如何执行，不能替代完整项目现状。采用观察器时，current.md 只归并有效轮次/attempt、候选、结果与下一步并引用运行目录，不复制完整事件流；事件投影不作为另一份人工项目记忆。
+memory/ 下的 references/ 存较长知识细节，evidence/ 存长期原始依据，archive/ 存改写前的记忆旧版；任务回报和临时材料留各 work-id 工作区。恢复必需的目标、约束、核心架构、结果与下一步仍直接写在 current.md。工作区计划描述如何执行，不能替代完整项目现状。采用观察器时，current.md 只归并有效轮次/attempt、候选、结果与下一步并引用运行目录，不复制完整事件流；事件投影不作为另一份人工项目记忆。
 
 地图与图纸的范围、核验基准、加载和失效规则按 [知识交接与协作](collaboration.md)；同一契约细节只保留一个维护位置。Agent ID 写入实例映射，同任务同线程复用目录，新线程接替创建新实例并引用检查点，不复制全部旧产物。
 
@@ -56,13 +63,13 @@ references/ 存较长知识细节，evidence/ 存长期原始依据，archive/ �
 项目约束：<长期有效的用户要求，注明来源与适用范围>。
 环境边界：<必要的平台、工作目录或目标环境限制>。
 主调度者或单 Agent 每次开始或恢复项目工作，第一份主动读取的记忆文件是
-.project-memory/current.md；必须全文读取，截断时继续读完，再开展工作。
+.agent-workspace/memory/current.md；必须全文读取，截断时继续读完，再开展工作。
 明确委派的普通子 Agent 遵循适用约束，按任务包读取相关地图、图纸和原始材料，
 不默认加载全体记忆；需更多材料时定点补读并报告缺口。
 记忆 writer 更新前完整读取当前快照和所有待改文件，单 writer、先归档后更新。
 当前事实直接以该快照为恢复依据，结合最新用户请求核验；不从历史推导现状。
-.project-memory/archive/ 仅在追溯历史或找回旧证据时按需读取。
-项目记忆与 .agent-work/ 仅供本地使用，不得暂存、提交、上传或复制到 PR/评论。
+.agent-workspace/memory/archive/ 仅在追溯历史或找回旧证据时按需读取。
+项目记忆与 .agent-workspace/ 仅供本地使用，不得暂存、提交、上传或复制到 PR/评论。
 ```
 
 入口只保留稳定且影响操作的内容。当前任务进度、故障处理过程、详细环境清单和决策沿革放到对应快照或归档中；保留已有人工指导。路径必须真实可达，并核实同层 override 等实际加载影响。既有入口仍要求全员全文读取时，按授权协调其原文后再使用分工，不允许子 Agent 自行忽略有效指导。

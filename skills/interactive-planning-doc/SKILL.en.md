@@ -7,6 +7,8 @@ description: >-
   TODO resolution plans, commit cadence design, validation criteria, acceptance
   cleanup, version/release preparation, or when the user says not to change code
   and wants decisions written into a reusable plan document.
+metadata:
+  version: "2026-11-03T15:05:00Z"
 ---
 
 # Interactive Planning Doc
@@ -29,6 +31,36 @@ practical, specific, and free of conversational noise.
 - If the user provides a URL, external schema, standard, release rule, or
   current project status that may have changed, verify it from the source before
   writing precise claims.
+
+## Project-Local Plans and Intermediate Files
+
+Use `.agent-workspace/` as the single root for project-local standards and
+intermediate files. Keep the working execution plan at
+`.agent-workspace/<work-id>/plan.md` and drafts, option comparisons, and temporary
+screenshots in that task's `scratch/` directory, for example
+`.agent-workspace/feature-search/plan.md`. Read applicable `AGENTS.md` instructions
+and existing task entries first, then reuse one main plan. Do not create duplicate
+authorities, default duplicate rules, or empty files just to fill a template.
+Choose a recognizable work ID that does not collide with existing work. Deliver
+formal planning documents, product docs, or publication artifacts to the user's
+specified destination; do not force those deliverables into a private workspace.
+
+Let `init` inventory and safely consolidate legacy directories and entries during
+project initialization. Do not maintain long-term compatibility paths or fallback
+lookups. Preserve existing plans, guides, and manual edits without overwriting;
+report conflicts and obtain confirmation before resolving them, verify the new
+content and references, and only then perform authorized cleanup. This skill does
+not migrate discovered old files itself or create a duplicate plan while migration
+is pending. Continue independent discussion and read-only planning while making
+unresolved path issues explicit.
+
+The workspace is local by default: do not stage, commit, publish, or include it in
+build outputs by default. Check Git ignore and untracked status and existing
+sharing arrangements, explain portability and privacy, and do not silently change
+ignore rules or untrack existing files. Deliver or share only with explicit
+authorization and a sensitive-information check. Clean up only disposable
+intermediate files created for this task; preserve the main plan while needed for
+execution or recovery, existing user files, and materials with unclear ownership.
 
 ## When Not to Use This Skill
 
@@ -59,7 +91,8 @@ Confirm or infer:
 
 - Planning scope and non-goals.
 - Whether code changes are forbidden.
-- The target document path.
+- The target document path and whether it is a local working plan or a formal
+  user-requested deliverable.
 - The implementation horizon: one feature, one refactor, one release, or a
   multi-phase roadmap.
 - Whether the plan should use step-by-step tasks, milestones, or both.
@@ -71,7 +104,8 @@ content placeholders concise.
 
 Read the smallest set of files needed to avoid writing fiction:
 
-- Project instructions such as `AGENTS.md`.
+- Project instructions such as `AGENTS.md` and the relevant standards and plan
+  entries in `.agent-workspace/`.
 - Existing architecture and roadmap docs relevant to the requested change.
 - Current source files only when needed to ground module names, data paths,
   existing behavior, or migration risks.
@@ -211,8 +245,10 @@ When the user changes a decision:
 - Check related milestones, commit groups, cleanup, and validation sections.
 - Summarize the document change briefly.
 
-When the user asks to commit, amend, or push, do it only after confirming the
-worktree contains only intended planning changes.
+When the user asks to commit, amend, or push, verify the specific files authorized
+for publication and check for sensitive information. Include only the intended
+changes, preserve unrelated user or concurrent edits, and do not stage or publish
+other `.agent-workspace/` materials with them.
 
 ### 11. Simulate the Next Executor Before Finalizing
 
@@ -279,6 +315,9 @@ Before finalizing the plan, verify:
 
 - The `description` still accurately triggers this skill and does not contain
   one-project-only details.
+- Project-local plans and intermediate files use the unified workspace; formal
+  deliverables follow the requested destination. There are no duplicate main plans
+  or long-term legacy-path fallbacks.
 - The plan can be executed by an agent that did not participate in the
   discussion.
 - Confirmed decisions are easy to find.

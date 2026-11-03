@@ -84,7 +84,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(sum(event["kind"] == "plan" for event in self.state()["events"]), 3)
 
     def test_project_identity_and_views_are_isolated(self):
-        other = self.base / "other-project" / ".agent-work" / "one" / "pipeline"
+        other = self.base / "other-project" / ".agent-workspace" / "one" / "pipeline"
         pipeline.mutate(other, "init", title="other", demo=True)
         first, second = self.state(), pipeline.read_state(other)
         self.assertEqual(second["project"]["root"], str(self.base / "other-project"))

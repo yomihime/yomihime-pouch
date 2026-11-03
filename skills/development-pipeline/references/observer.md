@@ -4,10 +4,10 @@
 
 ## 按项目和运行隔离
 
-每个项目使用自己的 .agent-work/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录。项目固定入口为 .agent-work/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
+每个项目使用自己的 .agent-workspace/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录；work-id 避开 memory、design、plans、work 及已有受管文件。项目固定入口为 .agent-workspace/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
 
 ```text
-.agent-work/
+.agent-workspace/
   index.html                     项目固定入口（事件派生的运行索引）
   pipeline-index-data.js         由事件重建的索引数据
   <work-id>/pipeline/
@@ -25,15 +25,17 @@
 
 ## 一次初始化，直接打开文件
 
+下列 init 子命令只创建一次流水线运行，不代替 project-init 的项目盘点与安全整理。项目根自动识别和项目索引只采用统一工作区，不查找旧目录、建立别名或自动迁移；旧项目下次开工时先处理 project-init 报告的材料与路径冲突。
+
 ```powershell
 $pipeline = "skills/development-pipeline/scripts/pipeline.py"
-$runDir = ".agent-work/当前任务/pipeline"
+$runDir = ".agent-workspace/当前任务/pipeline"
 python -X utf8 $pipeline init $runDir --title "当前任务" --project-root .
 ```
 
-打开项目 .agent-work/index.html，选择运行进入其观察页；已完成的运行链接到单文件报告。也可直接打开命令输出的 observer/index.html。省略 --project-root 时，从运行目录的 .agent-work 祖先识别项目根；不在该布局时采用运行目录的父目录。显式指定时要求运行目录位于该项目内。项目身份固定在初始化事件中，旧日志未记身份时显示未记录，不猜成当前项目。
+打开项目 .agent-workspace/index.html，选择运行进入其观察页；已完成的运行链接到单文件报告。也可直接打开命令输出的 observer/index.html。省略 --project-root 时，从运行目录的 .agent-workspace 祖先识别项目根；不在该布局时采用运行目录的父目录。显式指定时要求运行目录位于该项目内。显式指定其他位置的运行仍可直接操作和查看，但不因此进入项目索引。项目身份固定在初始化事件中，旧日志未记身份时显示未记录，不猜成当前项目。
 
-索引扫描项目 .agent-work 下的运行并重放非符号链接事件日志；不可读或损坏的日志显示读取失败，不以缓存状态冒充当前事实。completed 列为已归档，未完成且距最后事件至少 7 天列为过期，其余列为活动。归档和过期是索引分类，不移动或删除运行；过期只表示事件数据久未更新，不能证明执行者已停止，活动也不能证明进程存活。事件更新和 view 会重建索引数据，索引页每 5 秒读取该数据并按当前时间分类；需要手动重建时运行：
+索引只扫描 `.agent-workspace/<work-id>/pipeline/events.jsonl`，跳过保留目录、符号链接和嵌套项目，不递归收录记忆证据、初始化暂存或备份中的日志副本。重放发现的事件日志时，不可读或损坏的日志显示读取失败，不以缓存状态冒充当前事实。completed 列为已归档，未完成且距最后事件至少 7 天列为过期，其余列为活动。归档和过期是索引分类，不移动或删除运行；过期只表示事件数据久未更新，不能证明执行者已停止，活动也不能证明进程存活。事件更新和 view 会重建索引数据，索引页每 5 秒读取该数据并按当前时间分类；需要手动重建时运行：
 
 ```powershell
 python -X utf8 $pipeline index .

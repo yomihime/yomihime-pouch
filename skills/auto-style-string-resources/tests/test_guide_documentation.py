@@ -42,23 +42,26 @@ class GuideDocumentationTests(unittest.TestCase):
         self.assertParagraph(r"AGENTS\.md", r"保留原有", r"不.*完整指南")
         self.assertParagraph(r"路径失效|不可读", r"不要声称已读取", r"不要.*重建|不要.*覆盖")
 
-    def test_existing_guide_is_scoped_and_new_guide_respects_conventions(self):
+    def test_existing_guide_is_scoped_and_new_guide_uses_unified_workspace(self):
         self.assertParagraph(r"AGENTS\.md", r"相关章节", r"不.*全仓扫描")
-        self.assertParagraph(r"没有指南", r"分析", r"授权", r"local-dev", r"不强制")
+        self.assertParagraph(r"没有指南", r"分析", r"授权", r"\.agent-workspace/design/writing-guide\.md")
         self.assertParagraph(r"已有文件", r"授权", r"不自动覆盖")
 
-    def test_example_design_layout_keeps_responsibilities_distinct(self):
-        # This is an example convention, not a mandate to create these files.
-        for marker in (r"\.local-dev/design/writing-guide\.md", r"ui-guide\.md", r"resources\.md"):
+    def test_design_layout_keeps_responsibilities_distinct(self):
+        for marker in (r"\.agent-workspace/design/writing-guide\.md", r"ui-guide\.md", r"resources\.md"):
             with self.subTest(marker=marker):
                 self.assertRegex(self.guide, marker)
-        self.assertRegex(self.guide, r"resources\.md[^\n]*(可选|按需|需要时)|(可选|按需|需要时)[^\n]*resources\.md")
-        self.assertRegex(self.guide, r"示例|例如")
-        self.assertRegex(self.guide, r"现有.*约定|已有.*约定")
-        self.assertRegex(self.guide, r"不.*迁移")
-        self.assertRegex(self.guide, r"不.*(重复|复制)|避免.*(重复|多份)")
-        self.assertRegex(self.guide, r"已有指南.*(参考|沿用)")
-        self.assertParagraph(r"ui-guide\.md", r"resources\.md", r"按需|可选|不是必需")
+        self.assertParagraph(r"ui-guide\.md", r"resources\.md", r"按需", r"不默认生成重复规则")
+        self.assertParagraph(r"权威", r"引用", r"不复制")
+        self.assertParagraph(r"中间材料", r"\.agent-workspace/<work-id>/scratch/", r"正式文档", r"指定目的地")
+
+    def test_init_owns_safe_migration_without_legacy_fallback(self):
+        self.assertParagraph(r"init", r"盘点", r"安全整理", r"本技能不自行迁移")
+        self.assertParagraph(r"保留已有指南", r"不自动覆盖", r"冲突先报告并确认", r"验证新位置和入口")
+        self.assertParagraph(r"不建立旧路径的长期兼容", r"回退查找", r"不新建重复指南")
+        for text in (self.skill, self.readme):
+            with self.subTest(document=text[:40]):
+                self.assertNotIn(".local-dev/", text)
 
     def test_guide_is_persistent_work_cleanup_is_narrow(self):
         self.assertParagraph(r"指南", r"持久", r"不删除指南")
@@ -75,7 +78,7 @@ class GuideDocumentationTests(unittest.TestCase):
 
     def test_readme_signposts_the_guide_convention(self):
         guide = section(self.readme, r"项目风格指南.*")
-        for marker in (r"AGENTS\.md", r"local-dev", r"授权", r"缺失", r"Git", r"隐私"):
+        for marker in (r"AGENTS\.md", r"\.agent-workspace/", r"init", r"授权", r"缺失", r"Git", r"隐私"):
             with self.subTest(marker=marker):
                 self.assertRegex(guide, marker)
 
