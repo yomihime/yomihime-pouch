@@ -31,6 +31,14 @@
   const relationships = new Map(array(data.relationships).map(item => [item.id, item]));
   const flows = new Map(array(data.flows).map(item => [item.id, item]));
   const views = new Map(data.views.map(item => [item.id, item]));
+  const changes = array(data.changes);
+  const changeIndex = { elementIds: new Map(), contractIds: new Map(), flowIds: new Map() };
+  changes.forEach(change => Object.keys(changeIndex).forEach(field => array(change[field]).forEach(id => {
+    if (!changeIndex[field].has(id)) changeIndex[field].set(id, []);
+    changeIndex[field].get(id).push(change);
+  })));
+  const decisionLabels = { draft: '草案', accepted: '已接受', rejected: '已拒绝' };
+  const verificationLabels = { unverified: '未验证', implemented: '已实现', verified: '已验证' };
   const progressLabels = { completed: '已完成', in_progress: '正在开发', incomplete: '未完成', unknown: '进度未声明' };
   const semanticLabels = { main: '主路径', branch: '条件分支', async: '异步', return: '返回', error: '错误路径' };
   const reducedMotion = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
@@ -241,6 +249,7 @@
     });
     if (subtitle) append(link, dom('small', '', subtitle));
     append(parent, link);
+    return link;
   }
   function contractSection(ids) {
     if (!array(ids).length) return;
@@ -253,7 +262,13 @@
   }
   function detailsHeader(item, kind) {
     append(detail, append(dom('div', 'detail-kicker'), dom('span', '', kind), dom('span', '', 'READ ONLY')));
-    if (selected && selected.type === 'contract' && previousSelection) append(detail, button('← 返回所选项目', 'back-button', () => { const prior = previousSelection; previousSelection = null; select(prior); }));
+    if (selected && ((['contract', 'flow', 'change'].includes(selected.type) && previousSelection) || selected.type === 'change')) {
+      append(detail, button(previousSelection ? '← 返回所选项目' : '← 返回视图说明', 'back-button', () => {
+        const prior = previousSelection; previousSelection = null; select(prior);
+        const heading = detail.querySelector('h2');
+        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+      }));
+    }
     if (item.status) append(detail, status(item.status));
     if (item.status || Object.hasOwn(item, 'progress')) append(detail, progress(item.progress));
     append(detail, dom('h2', '', item.name || item.title || '设计说明'));
@@ -277,6 +292,61 @@
       append(box, card);
     });
   }
+  function appendChangeLinks(parent, items) {
+    items.forEach(change => {
+      const link = detailLink(parent, change.name,
+        `${change.id} · ${statusLabels[change.status] || '待确认'} · ${progressLabels[change.progress] || progressLabels.unknown}`,
+        () => select({ type: 'change', item: change }, true));
+      link.setAttribute('data-change-id', change.id);
+    });
+  }
+  function changeSection(field, id) {
+    const items = changeIndex[field].get(id) || [];
+    if (items.length) appendChangeLinks(section(`相关设计变更 / CHANGES (${items.length})`), items);
+  }
+  function renderChangeCatalog() {
+    if (!changes.length) return;
+    const catalog = dom('details', 'changes-catalog changes-panel');
+    append(catalog, dom('summary', '', `设计变更 · ${changes.length} 项（全部，含未关联项）`));
+    append(catalog, dom('p', 'change-catalog-note', '这是完整变更目录，不受当前视图、节点选择或搜索影响。选择条目查看决策、验收标准、开发进度及两类证据。'));
+    const list = dom('div', 'change-list'); appendChangeLinks(list, changes); append(catalog, list); append(main, catalog);
+  }
+  function showChange(item) {
+    detailsHeader(item, '设计变更 / CHANGE');
+    const decision = section('决策与验证 / DECISION & VERIFICATION');
+    append(decision,
+      dom('p', 'detail-description', `决策：${item.decision ? `${decisionLabels[item.decision] || item.decision} (${item.decision})` : '未声明'}`),
+      dom('p', 'detail-description', `验证：${item.verification ? `${verificationLabels[item.verification] || item.verification} (${item.verification})` : '未声明'}`),
+      dom('p', 'change-truth-note', '决策、验证和开发进度分别声明。验收标准是待核实条件，不代表已验收。'));
+    if (array(item.acceptance).length) listSection('验收标准 / ACCEPTANCE', item.acceptance);
+    else append(section('验收标准 / ACCEPTANCE'), dom('p', 'contracts-empty', '未声明验收标准'));
+    if (array(item.elementIds).length) {
+      const box = section('关联构件 / ELEMENTS');
+      item.elementIds.forEach(id => {
+        const element = elements.get(id);
+        if (element) detailLink(box, element.name, element.id, () => select({ type: 'element', item: element }));
+      });
+    }
+    contractSection(item.contractIds);
+    if (array(item.flowIds).length) {
+      const box = section('关联流程 / FLOWS');
+      item.flowIds.forEach(id => {
+        const flow = flows.get(id);
+        if (flow) detailLink(box, flow.name, flow.id, () => select({ type: 'flow', item: flow }, true));
+      });
+    }
+    if (!array(item.elementIds).length && !array(item.contractIds).length && !array(item.flowIds).length) append(section('关联范围 / SCOPE'), dom('p', 'detail-description', '未关联具体构件、契约或流程；此项仍保留在完整变更目录中。'));
+    evidenceSection(item);
+  }
+  function showFlow(item) {
+    detailsHeader(item, '业务流程 / FLOW');
+    listSection('已建模步骤 / STEPS', array(item.steps).map(step => `${step.name} · ${step.id}`));
+    const view = data.views.find(candidate => candidate.kind === 'flow' && candidate.flowId === item.id);
+    if (view) append(detail, button(`打开流程图 · ${view.name}`, 'detail-link', () => { viewTrail = []; openView(view); focusViewHeading(); }));
+    changeSection('flowIds', item.id);
+    evidenceSection(item);
+  }
+
   function showContract(item) {
     detailsHeader(item, '接口契约 / CONTRACT');
     renderFields('输入 / INPUT', item.inputs); renderFields('输出 / OUTPUT', item.outputs);
@@ -297,6 +367,7 @@
       const box = section('示例 / EXAMPLES');
       item.examples.forEach(example => append(box, append(dom('div', 'example'), dom('strong', '', example.name), dom('div', '', '输入'), dom('pre', '', stringify(example.input)), dom('div', '', '输出'), dom('pre', '', stringify(example.output)))));
     }
+    changeSection('contractIds', item.id);
     evidenceSection(item);
   }
   function showElement(item) {
@@ -316,16 +387,7 @@
       const box = section('协作关系 / RELATIONSHIPS');
       connected.forEach(edge => detailLink(box, edge.label, `${elements.get(edge.from)?.name || edge.from} → ${elements.get(edge.to)?.name || edge.to}`, () => select({ type: 'relationship', item: edge })));
     }
-    const changes = array(data.changes).filter(change => array(change.elementIds).includes(item.id));
-    if (changes.length) {
-      const box = section('设计变更 / CHANGES');
-      changes.forEach(change => {
-        const card = append(dom('div', 'change'), dom('strong', '', change.name), status(change.status), dom('p', '', change.description));
-        if (change.decision || change.verification) append(card, dom('p', '', [change.decision && `决策：${change.decision}`, change.verification && `验证：${change.verification}`].filter(Boolean).join(' · ')));
-        array(change.acceptance).forEach(value => append(card, dom('p', '', `验收：${value}`)));
-        append(box, card);
-      });
-    }
+    changeSection('elementIds', item.id);
     evidenceSection(item);
   }
   function showStep(item) {
@@ -363,7 +425,7 @@
     const flow = currentView.kind === 'flow' ? flows.get(currentView.flowId) : null;
     detailsHeader(flow || currentView, `${viewLabels[currentView.kind] || '视图'} / VIEW`);
     append(detail, dom('p', 'detail-description', '选择图中的构件或流程步骤，查看职责、规则、接口契约和证据。使用 Tab 键选择，Enter 或空格打开详情。'));
-    if (flow) evidenceSection(flow);
+    if (flow) { evidenceSection(flow); changeSection('flowIds', flow.id); }
     if (currentView.focusElementId) {
       const owner = elements.get(currentView.focusElementId);
       if (owner) detailLink(section('当前边界 / FOCUS'), owner.name, owner.id, () => select({ type: 'element', item: owner }));
@@ -380,11 +442,14 @@
   function select(selection, remember = false) {
     if (trace?.playing) stopTrace();
     if (remember) previousSelection = selected;
-    else if (selection?.type !== 'contract') previousSelection = null;
+    else if (!['contract', 'change', 'flow'].includes(selection?.type)) previousSelection = null;
     selected = selection; detail.replaceChildren();
+    detail.classList.toggle('change-detail', selection?.type === 'change');
     nodeButtons.forEach((node, id) => node.setAttribute('aria-pressed', String(Boolean(selection && ((selection.type === 'step' || selection.type === 'element') && selection.item.id === id)))));
     if (!selection) showView();
     else if (selection.type === 'contract') showContract(selection.item);
+    else if (selection.type === 'change') showChange(selection.item);
+    else if (selection.type === 'flow') showFlow(selection.item);
     else if (selection.type === 'element') showElement(selection.item);
     else if (selection.type === 'step') showStep(selection.item);
     else showRelationship(selection.item, selection.type === 'transition');
@@ -610,6 +675,7 @@
       currentGraph.edges.forEach(edge => detailLink(list, edge.label || edge.condition || '未命名关系', `${map.get(edge.from)?.name || edge.from} → ${map.get(edge.to)?.name || edge.to}`, () => select({ type: flow ? 'transition' : 'relationship', item: edge })));
       append(relationBlock, list); append(main, relationBlock);
     }
+    renderChangeCatalog();
     if (data.architecture?.rationale) {
       const note = dom('div', 'architecture-note');
       append(note, dom('span', 'note-icon', '◇'), append(dom('div'), dom('h3', '', `架构决策 · ${data.architecture.style}`), dom('p', '', data.architecture.rationale))); append(main, note);

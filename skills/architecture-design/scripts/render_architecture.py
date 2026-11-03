@@ -18,7 +18,7 @@ from pathlib import Path, PurePosixPath
 import re
 import sys
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 MAX_SOURCE_BYTES = 5 * 1024 * 1024
 MAX_ERRORS = 100
 MAX_SAFE_INTEGER = 9007199254740991
