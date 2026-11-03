@@ -8,7 +8,7 @@ description: >-
   cleanup, version/release preparation, or when the user says not to change code
   and wants decisions written into a reusable plan document.
 metadata:
-  version: "2026-11-03T16:47:36Z"
+  version: "2026-11-03T17:20:00Z"
 ---
 
 # Interactive Planning Doc
@@ -42,7 +42,7 @@ screenshots in that task's `scratch/` directory, for example
 and existing task entries first, then reuse one main plan. Do not create duplicate
 authorities, default duplicate rules, or empty files just to fill a template.
 Choose a recognizable work ID that does not collide with existing work. It must not use
-`memory`, `design`, `architecture`, `plans`, `work`, or other names reserved by existing tools. Deliver
+`memory`, `design`, `architecture`, `plans`, `work`, or other names reserved by existing tools. The fixed root filenames `runtime.md`, `index.html`, `pipeline-index-data.js`, and `.pipeline-index.lock` are also reserved even before they exist; compare case-insensitively and treat trailing dots or spaces as Windows aliases. Deliver
 formal planning documents, product docs, or publication artifacts to the user's
 specified destination; do not force those deliverables into a private workspace.
 

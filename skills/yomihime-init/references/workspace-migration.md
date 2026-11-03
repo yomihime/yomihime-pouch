@@ -4,7 +4,7 @@
 
 开始时先核对真实项目根、有效 AGENTS/override、当前 staged/unstaged/untracked 状态和必要的文件权限。基线用于分辨既有改动，不修改、暂存或回滚它们。迁移只整理经证实的 Agent 材料，不做产品代码迁移，也不引入长期兼容层。
 
-先检查 `.agent-workspace/` 及其父路径不是意外 symlink、嵌套仓库或别的项目的工作区。已存在时保留内容，按需补充；不能先清空再初始化。使用唯一 work-id，不得占用 memory、architecture、design、plans、work 或已有工具保留名，不和其他任务争同一个 writer 或目录。
+先检查 `.agent-workspace/` 及其父路径不是意外 symlink、嵌套仓库或别的项目的工作区。已存在时保留内容，按需补充；不能先清空再初始化。使用唯一 work-id，不得占用 memory、architecture、design、plans、work 或已有工具保留名，也不得使用尚未创建的固定根文件名 runtime.md、index.html、pipeline-index-data.js、.pipeline-index.lock（不区分大小写，并将尾随点和空格视为 Windows 别名），不和其他任务争同一个 writer 或目录。
 
 默认本地私有：读取 Git 对这些路径的 tracked/staged/ignore 状态。在授权范围内用 `git rev-parse --git-path info/exclude` 找到该工作区真实的本地 exclude，精确添加项目根 `.agent-workspace/` 的匹配项并验证忽略结果，不盲写一个猜测的 `.git/info/exclude`。不动共享 `.gitignore`、全局规则或用户暂存区，不擅自改变文件的已跟踪状态；获准的简短入口更新仍按下述范围执行。非 Git 项目则说明无法提供 Git 忽略保障，不伪造检查通过。
 

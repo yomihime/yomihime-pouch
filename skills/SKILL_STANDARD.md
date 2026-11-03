@@ -10,7 +10,7 @@
 
 ## 项目工作区
 
-- 项目内技能和 Agent 的规范、记忆、计划、运行记录与临时材料统一放入 `.agent-workspace/`。默认布局：`design/` 存设计/文案指南与按需资源记录；`memory/` 存项目记忆；`architecture/` 仅在无现有有效图源且确有需要时按需保存跨任务架构图纸；`<work-id>/plan.md`、`jobs/`、`pipeline/`、`scratch/` 及 `artifacts.md` 存任务材料；`index.html` 是流水线入口。项目能力记录可放 `runtime.md`。目录按需创建，`design`、`memory`、`architecture` 等保留名不可作为 work-id。
+- 项目内技能和 Agent 的规范、记忆、计划、运行记录与临时材料统一放入 `.agent-workspace/`。默认布局：`design/` 存设计/文案指南与按需资源记录；`memory/` 存项目记忆；`architecture/` 仅在无现有有效图源且确有需要时按需保存跨任务架构图纸；`<work-id>/plan.md`、`jobs/`、`pipeline/`、`scratch/` 及 `artifacts.md` 存任务材料；`index.html` 是流水线入口。项目能力记录可放 `runtime.md`。目录按需创建，`design`、`memory`、`architecture` 等保留名不可作为 work-id。固定根文件名 `runtime.md`、`index.html`、`pipeline-index-data.js`、`.pipeline-index.lock` 即使尚未创建也保留，work-id 比较时不区分大小写，尾随点和空格按 Windows 别名处理。
 - 该工作区默认是本地协作材料，不自动提交、发布或删除。正式交付物遵循用户指定的位置与授权。`AGENTS.md` 保留在项目既定位置，作为简短入口指向实际有效文档；保护既有内容、隐私和 Git 忽略状态。
 - 源码默认在主 checkout，按互不重叠文件分配写入权。`.agent-workspace/` 不放源码 checkout 或 worktree；跨仓库确需 worktree 时仅使用主仓库根目录下可见的单个共享位置。成功交接并接收后回收 Agent，仅在确认授权、引用、占用与恢复条件后清理自建临时材料；保留当前指南、记忆和流水线日志/报告。
 - 跨任务架构图纸原位复用现有有效唯一源，不因新默认目录迁移或覆盖。现有权威若为非 JSON 正式材料，先保留并协调唯一权威及获准转换，不能自动降为摘要或旁建第二图源。稳定的 `AGENTS.md` 或 `memory/current.md` 入口登记同一源的路径、修订、现状/目标状态与 owner；current.md 仍直接保留恢复必需概览，不再手工维护同义 project-memory 图源。图源由单一 writer 更新，交接核对入口、修订与接收者；任务/运行清理不得删除仍在使用的图源及引用依据/视图。HTML 等视图为派生物，不取代机器源或成为另一份权威。

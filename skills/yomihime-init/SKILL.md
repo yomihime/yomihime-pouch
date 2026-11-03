@@ -5,7 +5,7 @@ description: >-
   初始化 .agent-workspace，并一次性整理旧项目中的 Agent 中间材料和规范。
   用于初始化项目工作环境、检查技能更新或整理旧工作目录，不实施产品功能或修改项目代码。
 metadata:
-  version: "2026-11-03T16:48:16Z"
+  version: "2026-11-03T17:20:00Z"
 ---
 
 # yomihime init
@@ -70,6 +70,8 @@ metadata:
 ├── work/                    # 无专用归属的临时材料，按需
 ├── runtime.md               # 已核验的运行环境和能力，按需
 ├── index.html               # 流水线工具生成的项目索引，按需
+├── pipeline-index-data.js   # 流水线工具生成的索引数据
+├── .pipeline-index.lock     # 流水线工具生成的索引锁文件
 └── <work-id>/
     ├── plan.md
     ├── scratch/
@@ -77,9 +79,11 @@ metadata:
     ├── pipeline/
     ├── artifacts.md
     └── init/                # 本次盘点、迁移映射、技能来源与更新回执，按需
+        ├── staging/         # 候选暂存，按需
+        └── backups/         # 恢复依据，按需保留
 ```
 
-`<work-id>` 不得占用 `memory`、`architecture`、`design`、`plans`、`work` 或已有工具保留名称。init 可使用 `init-<UTC时间>` 加必要防冲突后缀，不复用他人正在写入的目录。
+`<work-id>` 不得占用 `memory`、`architecture`、`design`、`plans`、`work` 或已有工具保留名称。固定根文件名 `runtime.md`、`index.html`、`pipeline-index-data.js`、`.pipeline-index.lock` 即使尚未创建也保留，比较时不区分大小写，尾随点和空格按 Windows 别名处理。init 可使用 `init-<UTC时间>` 加必要防冲突后缀，不复用他人正在写入的目录。
 
 - `.local-dev/`、`.local_dev/`、`.project-memory/`、`.agent-work/` 等只在本次迁移审计时识别，不设目录搜索回退、别名、软链接或双写；新建材料使用新结构。有效入口已明确指向既有架构权威源时，继续原位使用该源不属于旧目录 fallback；未获迁移授权前保留其实际入口与使用，不旁建默认源或仅因路径旧而阻断读取。
 - 旧项目不套固定模板。结合实际入口、用途、引用和占用逐项判断，记录「原路径 → 新路径、依据、校验、未决项」。只整理确认为 Agent 工作材料、计划、记忆或规范的文件，不按目录名猜测可移动或可删除。

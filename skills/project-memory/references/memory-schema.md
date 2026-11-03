@@ -4,6 +4,8 @@
 
 ## 文件职责
 
+图中标为「工具生成」的文件由相应工具在执行时创建或更新，其余是 Agent 按需维护的路径约定，不会随初始化自动生成整棵目录树。流水线文件由其 CLI 管理；架构源与可选快照路径只有本次需要时才使用。
+
 ```text
 AGENTS.md                         短入口：稳定约束、必要环境边界、按角色读取规则
 .agent-workspace/                 统一的项目本地私有材料
@@ -21,6 +23,9 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
       <原相对路径>                旧文件的原始内容
   architecture/                   按需：跨任务稳定架构源；已有有效源原位复用
     architecture.json             采用 architecture-design 且无有效源时建立，逐项记录状态
+    <scope-id>/architecture.json   按需约定：确需拆开的独立范围，不复制共享契约
+    views/                        按需约定：可选离线快照，也可输出到任务产物目录
+      architecture-<revision>.html 按需约定的输出名；显式渲染时由工具生成，不是编辑入口
   design/                         按需：持久设计指南，由对应技能维护
     ui-guide.md
     writing-guide.md
@@ -28,18 +33,24 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
   plans/                          按需：独立的非任务计划，不替代任务 plan.md
   work/                           按需：不属于单一任务的临时材料，不存源码 checkout
   runtime.md                      按需：运行时能力缓存
-  index.html                      按需：事件派生的项目流水线索引
+  index.html                      工具生成：事件派生的项目流水线索引，保留固定入口
+  pipeline-index-data.js          工具生成：可从事件重建的项目索引数据
+  .pipeline-index.lock            工具生成：项目索引跨进程锁文件，释放后仍留存
   <work-id>/
     plan.md                       本批目标、依赖、分工与验收；已有计划优先复用
+    scratch/                      按需约定：本任务临时输入、脚本和中间材料
+    init/                         按需约定：盘点、迁移映射和更新回执，文件名不固定
+      staging/                    按需约定：候选技能暂存，不是生效安装
+      backups/                    按需约定：原件或迁移归档，保留恢复依据
     pipeline/                     按需：development-pipeline 观察器
-      events.jsonl                唯一机器事件源，页面与状态可重建
-      .pipeline.lock              读写锁；在用时不手动删除
-      observer/                   每项目/运行独立静态页面
+      events.jsonl                工具生成：持久的唯一机器事件源，不作临时缓存清理
+      .pipeline.lock              工具生成：运行读写锁文件，释放后仍留存
+      observer/                   工具生成：本运行可重建的静态页面与资源
         index.html
         app.js
         styles.css
         state.js                  事件派生数据
-      report.html                 完成后：单文件最终结果
+      report.html                 工具生成：完成后保留的单文件最终结果
     jobs/<job-id>/
       task.md                     任务约定、实例映射与有效输入入口
       agents/<instance-id>/
@@ -51,7 +62,9 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
     artifacts.md                  按需：关键产物和保留去向
 ```
 
-目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 避免与 memory、architecture、design、plans、work 及已有受管文件重名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 yomihime-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
+目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 不得占用 memory、architecture、design、plans、work、runtime.md、index.html、pipeline-index-data.js、.pipeline-index.lock，即使对应路径尚未生成；也不得与其他已有受管路径冲突。按 Windows 路径语义比较保留名时不区分大小写，尾部点或空格形成的别名同样禁止，例如 INDEX.HTML、index.html.；不要通过这些变体绕过保留名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 yomihime-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
+
+记忆、活跃架构源、设计指南、执行中的计划、必要证据、初始化回执/恢复映射与 backups/ 默认保留；events.jsonl、最终 report.html 和项目索引入口不因任务结束自动删除。scratch/ 与 init/staging/ 只是临时用途候选，须先核对引用、占用、恢复依据和清理授权，不能凭目录名删去唯一材料。两个锁文件由工具维护，文件存在不代表锁仍被占用；在用时不得删除，也不把已释放的锁文件当普通残留清理。派生页面和索引数据可由保留事件重建，但可重建不等于已有删除授权。
 
 memory/ 下的 references/ 存较长知识细节，evidence/ 存长期原始依据，archive/ 存改写前的记忆旧版；任务回报和临时材料留各 work-id 工作区。恢复必需的目标、约束、核心架构、结果与下一步仍直接写在 current.md。工作区计划描述如何执行，不能替代完整项目现状。采用观察器时，current.md 只归并有效轮次/attempt、候选、结果与下一步并引用运行目录，不复制完整事件流；事件投影不作为另一份人工项目记忆。
 

@@ -8,7 +8,7 @@ description: >-
   acceptance cleanup, version/release preparation, or when the user asks to
   avoid code changes and capture decisions in a reusable execution plan.
 metadata:
-  version: "2026-11-03T16:47:36Z"
+  version: "2026-11-03T17:20:00Z"
 ---
 
 # Interactive Planning Doc
@@ -26,7 +26,7 @@ metadata:
 
 ## 项目本地计划与中间产物
 
-项目本地规范与中间产物统一放在 `.agent-workspace/`。协作执行计划使用 `.agent-workspace/<work-id>/plan.md`，草稿、候选比较和临时截图使用同一任务下的 `scratch/`；例如 `.agent-workspace/feature-search/plan.md`。先读适用的 `AGENTS.md` 和已有任务入口，复用本次工作的主计划，不创建并行权威或默认重复规则。`<work-id>` 应能辨认任务且不与既有工作冲突，不得占用 `memory`、`design`、`architecture`、`plans`、`work` 或已有工具保留名称；不因目录模板而一次性创建空文件。用户明确指定的正式规划文档、产品文档或发布产物按其目的地交付，不强制改成本地私有文件。
+项目本地规范与中间产物统一放在 `.agent-workspace/`。协作执行计划使用 `.agent-workspace/<work-id>/plan.md`，草稿、候选比较和临时截图使用同一任务下的 `scratch/`；例如 `.agent-workspace/feature-search/plan.md`。先读适用的 `AGENTS.md` 和已有任务入口，复用本次工作的主计划，不创建并行权威或默认重复规则。`<work-id>` 应能辨认任务且不与既有工作冲突，不得占用 `memory`、`design`、`architecture`、`plans`、`work` 或已有工具保留名称；固定根文件名 `runtime.md`、`index.html`、`pipeline-index-data.js`、`.pipeline-index.lock` 即使尚未创建也保留，比较时不区分大小写，尾随点和空格按 Windows 别名处理；不因目录模板而一次性创建空文件。用户明确指定的正式规划文档、产品文档或发布产物按其目的地交付，不强制改成本地私有文件。
 
 旧目录和旧入口由 `yomihime-init` 在项目初始化时盘点并安全整理，不建立长期兼容路径或回退查找。保留既有计划、指南和人工编辑，不自动覆盖；遇到冲突先报告并确认，验证目标内容与引用后再按授权收尾。本技能不因发现旧文件而自行迁移，也不在整理未完成时另建重复计划；不依赖迁移的讨论和只读规划可以继续，明确未解决的路径问题。
 

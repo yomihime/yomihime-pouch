@@ -23,6 +23,7 @@ from urllib.parse import quote, urlsplit
 
 WORKSPACE_NAME = ".agent-workspace"
 WORKSPACE_RESERVED_DIRS = frozenset({"memory", "design", "architecture", "plans", "work", WORKSPACE_NAME})
+WORKSPACE_RESERVED_FILES = frozenset({"index.html", "pipeline-index-data.js", "runtime.md", ".pipeline-index.lock"})
 
 
 class PipelineError(ValueError):
@@ -32,6 +33,37 @@ class PipelineError(ValueError):
 def require(condition, message):
     if not condition:
         raise PipelineError(message)
+
+
+def workspace_name_key(name):
+    """Use portable Windows filename equivalence for reserved root slots."""
+    return name.rstrip(" .").casefold()
+
+
+def reserved_workspace_file_slot(run_dir):
+    """Find a fixed-file root slot in either the requested or resolved path.
+
+    This is a namespace guard, not a filesystem sandbox. Check every workspace
+    ancestor so a nested project or symlink cannot hide the root collision.
+    Same-named directories outside a workspace, or deeper under a valid work-id,
+    remain ordinary explicit custom run paths.
+    """
+    requested = Path(os.path.abspath(run_dir))
+    paths = [requested]
+    for directory in paths:
+        for workspace in directory.parents:
+            if workspace_name_key(workspace.name) != WORKSPACE_NAME:
+                continue
+            first = directory.relative_to(workspace).parts[0]
+            if workspace_name_key(first) in WORKSPACE_RESERVED_FILES:
+                return workspace / first
+        if len(paths) == 1:
+            # Resolve the ORIGINAL path, matching locked(). Resolving abspath
+            # would lose symlink/.. semantics and could miss a real collision.
+            resolved = Path(run_dir).resolve()
+            if resolved != requested:
+                paths.append(resolved)
+    return None
 
 
 def text(value, name, nonempty=False):
@@ -378,6 +410,12 @@ def evidence_records(paths):
 
 
 def mutate(run_dir, kind, **payload):
+    if kind == "init":
+        # Reject before mkdir, locks, or an initial event can occupy a fixed
+        # workspace file slot. Historical runs remain explicitly readable;
+        # existing non-init commands keep their journals and local views usable.
+        collision = reserved_workspace_file_slot(run_dir)
+        require(collision is None, f"reserved workspace root file name cannot be a run directory: {collision}; choose a non-reserved work-id")
     with locked(run_dir, create=kind == "init") as directory:
         if kind == "init":
             require(not (directory / "events.jsonl").exists(), "run already initialized")
@@ -484,6 +522,12 @@ def enclosing_work_dir(directory):
 
 
 def rebuild_enclosing_index(directory):
+    # Do not auto-rebuild the workspace index for an explicitly addressed
+    # historical run occupying a fixed-file slot. Its events/views stay usable,
+    # but it is never discovered as a live work-id or silently moved/deleted.
+    # An explicit index command reports the root collision for manual recovery.
+    if reserved_workspace_file_slot(directory) is not None:
+        return None
     work = enclosing_work_dir(directory)
     if work is not None:
         return build_index(work)
@@ -495,11 +539,20 @@ def build_index(work_dir):
     work = Path(work_dir)
     require(not work.is_symlink(), "index directory cannot be a symlink")
     require(work.name == WORKSPACE_NAME, f"index directory must be named {WORKSPACE_NAME}")
+    # Preflight before creating the index lock or any projections. A legacy
+    # directory occupying a fixed-file slot must not be removed or overwritten.
+    if work.is_dir():
+        for item in work.iterdir():
+            key = workspace_name_key(item.name)
+            if key in WORKSPACE_RESERVED_FILES:
+                require(not item.is_dir(), f"reserved workspace root file is occupied by a directory: {item}; preserve existing data and resolve the conflict before rebuilding the index")
+                if key == ".pipeline-index.lock":
+                    require(not item.is_symlink(), f"workspace index lock cannot be a symlink: {item}")
     work.mkdir(parents=True, exist_ok=True)
     entries = []
     with locked(work, lock_name=".pipeline-index.lock") as work:
         for work_item in sorted(work.iterdir()):
-            if work_item.name in WORKSPACE_RESERVED_DIRS or work_item.is_symlink():
+            if workspace_name_key(work_item.name) in WORKSPACE_RESERVED_DIRS | WORKSPACE_RESERVED_FILES or work_item.is_symlink():
                 continue
             root = work_item / "pipeline"
             try:
