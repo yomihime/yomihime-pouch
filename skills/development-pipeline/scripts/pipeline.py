@@ -18,7 +18,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 
 class PipelineError(ValueError):
@@ -70,13 +70,13 @@ def strict_json(value):
 
 
 @contextmanager
-def locked(run_dir, create=False):
+def locked(run_dir, create=False, lock_name=".pipeline.lock"):
     """The same OS lock protects readers and writers, including separate servers."""
     directory = Path(run_dir).resolve()
     if create:
         directory.mkdir(parents=True, exist_ok=True)
     require(directory.is_dir(), f"run directory does not exist: {directory}")
-    with (directory / ".pipeline.lock").open("a+b") as handle:
+    with (directory / lock_name).open("a+b") as handle:
         if os.name == "nt":
             import msvcrt
             handle.seek(0, os.SEEK_END)
@@ -350,7 +350,7 @@ def replay(directory):
         try:
             require(bool(line), "empty event line")
             state = apply_event(state, strict_json(line.decode("utf-8")))
-        except (ValueError, KeyError, TypeError, UnicodeError, AttributeError, IndexError) as error:
+        except (ValueError, KeyError, TypeError, UnicodeError, AttributeError, IndexError, RecursionError) as error:
             raise PipelineError(f"corrupt event log at line {line_number}: {error}") from error
     return state
 
@@ -411,7 +411,14 @@ def mutate(run_dir, kind, **payload):
             write_observer(directory, next_state, refresh_assets=kind == "init")
         except (OSError, PipelineError) as error:
             raise PipelineError(f"event #{event['seq']} was recorded, but observer output failed: {error}; run 'view' to rebuild without repeating the event") from error
-        return event, next_state
+    # Never acquire the project lock while holding a run lock. The index takes
+    # that project lock before replaying runs, so concurrent writers cannot
+    # deadlock or publish an older projection after a newer one.
+    try:
+        rebuild_enclosing_index(directory)
+    except (OSError, PipelineError) as error:
+        raise PipelineError(f"event #{event['seq']} was recorded, but index output failed: {error}; run 'index' to rebuild without repeating the event") from error
+    return event, next_state
 
 
 def atomic_text(path, content):
@@ -461,7 +468,79 @@ def write_observer(directory, state, refresh_assets=False):
 
 def build_observer(run_dir):
     with locked(run_dir) as directory:
-        return write_observer(directory, replay(directory), refresh_assets=True)
+        target = write_observer(directory, replay(directory), refresh_assets=True)
+    rebuild_enclosing_index(directory)
+    return target
+
+
+def enclosing_work_dir(directory):
+    directory = Path(directory).resolve()
+    return next((p for p in (directory, *directory.parents) if p.name == ".agent-work"), None)
+
+
+def rebuild_enclosing_index(directory):
+    work = enclosing_work_dir(directory)
+    if work is not None:
+        return build_index(work)
+    return None
+
+
+def build_index(work_dir):
+    """Rebuild a disposable project index from journals, never from a registry."""
+    work = Path(work_dir)
+    require(not work.is_symlink(), "index directory cannot be a symlink")
+    require(work.name == ".agent-work", "index directory must be named .agent-work")
+    work.mkdir(parents=True, exist_ok=True)
+    entries = []
+    with locked(work, lock_name=".pipeline-index.lock") as work:
+        def walk_error(error):
+            entries.append({"path": str(error.filename or work), "error": str(error)})
+        for root, dirs, files in os.walk(work, followlinks=False, onerror=walk_error):
+            root = Path(root)
+            # A nested project's .agent-work has its own index and lock.
+            # Do not mix its runs into this project's index.
+            dirs[:] = sorted(d for d in dirs if d not in {"observer", ".agent-work"} and not (root / d).is_symlink())
+            if "events.jsonl" not in files:
+                continue
+            try:
+                state = read_state(root)
+                relative = root.relative_to(work)
+                def link(name):
+                    path = root / name
+                    if path.is_symlink() or not path.is_file():
+                        return None
+                    return "./" + quote((relative / name).as_posix(), safe="/")
+                observer = root / "observer"
+                observer_link = None if observer.is_symlink() else link("observer/index.html")
+                entries.append({"title": state["title"], "run_id": state["run_id"],
+                                "project": (state.get("project") or {}).get("name"),
+                                "round": state["current_round"], "status": state["status"],
+                                "updated_at": state["updated_at"], "revision": state["revision"],
+                                "demo": state["demo"], "path": relative.as_posix(),
+                                "observer": observer_link, "report": link("report.html") if state["status"] == "completed" else None})
+            except (OSError, PipelineError, ValueError) as error:
+                # Surface corrupt/inaccessible journals without pretending their last
+                # known state is current. No cached status is substituted.
+                entries.append({"path": root.relative_to(work).as_posix(), "error": str(error)})
+        assets = Path(__file__).resolve().parents[1] / "assets" / "index"
+        template = (assets / "index.html").read_text(encoding="utf-8")
+        template = template.replace("<!-- index-style -->", "<style>" + (assets / "styles.css").read_text(encoding="utf-8") + "</style>")
+        template = template.replace("<!-- index-app -->", "<script>" + (assets / "app.js").read_text(encoding="utf-8") + "</script>")
+        # Do not overwrite a pre-existing project file that is not ours.
+        for filename, signature in (("index.html", "<!-- generated by development-pipeline index -->"),
+                                    ("pipeline-index-data.js", "/* generated by development-pipeline index */")):
+            output = work / filename
+            require(not output.is_symlink(), f"index output cannot be a symlink: {output}")
+            if output.exists():
+                require(output.is_file(), f"refusing to overwrite unowned index output: {output}")
+                with output.open("rb") as existing:
+                    require(existing.read(len(signature)) == signature.encode("ascii"),
+                            f"refusing to overwrite unowned index output: {output}")
+        # The data file is replaced first: a reader sees a complete old or new
+        # projection, never a partially-written script.
+        atomic_text(work / "pipeline-index-data.js", "/* generated by development-pipeline index */\nwindow.pipelineIndexReceive(" + script_json({"generated_at": datetime.now(timezone.utc).isoformat(), "runs": entries}) + ");\n")
+        atomic_text(work / "index.html", "<!-- generated by development-pipeline index -->\n" + template)
+    return work / "index.html"
 
 
 def mermaid(state):
@@ -620,9 +699,15 @@ def main(argv=None):
             group.add_argument("--mermaid", action="store_true")
         elif command == "serve":
             sub.add_argument("--port", type=int, default=8765)
+    index = commands.add_parser("index", help="rebuild the project .agent-work index")
+    index.add_argument("project_root", help="project root containing .agent-work")
     args = parser.parse_args(argv)
     try:
-        if args.command == "status":
+        if args.command == "index":
+            project_root = Path(args.project_root).resolve()
+            require(project_root.is_dir(), "project root must exist")
+            print(build_index(project_root / ".agent-work"))
+        elif args.command == "status":
             state = read_state(args.run_dir)
             print(json.dumps(state, ensure_ascii=False, indent=2) if args.json else mermaid(state) if args.mermaid else markdown(state))
         elif args.command == "view":
@@ -646,6 +731,9 @@ def main(argv=None):
             print(printable(f"#{event['seq']} {event['kind']} {event['entity_id'] or event['round_id'] or ''} {event.get('status', event.get('decision', ''))} → {state['status']} (attempt {state['attempt']})"))
             if command == "init":
                 print(printable(str(Path(run_dir).resolve() / "observer" / "index.html")))
+                work = enclosing_work_dir(run_dir)
+                if work is not None:
+                    print(printable(f"Project index: {work / 'index.html'}"))
             elif state["status"] == "completed":
                 print(printable(f"Final static report: {Path(run_dir).resolve() / 'report.html'}"))
         return 0

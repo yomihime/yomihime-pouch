@@ -10,11 +10,11 @@ identity: work-id / job-id / instance-id / input-version / role
 pipeline: 按需关联 REQ、milestone、slice、layer、round/wave、检查点、运行目录/节点 ID、本任务验收与证据
 goal: REQ 来源、目标、非目标、预期产物、可观察验收
 constraints: 有效用户要求、权限与数据边界、不得改变的行为
-baseline: 仓库与工作目录绝对路径、候选、相关 staged/unstaged/untracked 基准
+baseline: 主仓库与主 checkout 绝对路径、候选、相关 staged/unstaged/untracked 基准；跨仓库确需共享 worktree 时另列其可见路径与原因
 knowledge: 相关已核验事实、来源与范围；假设和未知分开
 maps: 相关地图/图纸路径与章节/符号、基准、现状或目标及确认状态
 dependencies: 已就绪契约版本、输入、上游/下游任务；未就绪项
-access: 可读范围、唯一写入范围、共享资源 owner、允许动作
+access: 可读范围、互不重叠的文件写入范围、共享文件和资源 owner、允许动作
 outputs: 报告与证据位置、所需验证、停止/交接条件
 resources: 已知模型/effort/速度及生效证据或未知、容量与用户硬限制
 ```

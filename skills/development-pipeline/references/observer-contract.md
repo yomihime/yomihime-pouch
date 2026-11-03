@@ -6,11 +6,13 @@
 
 ## 文件与命令
 
-运行材料位于各项目获准的 .agent-work/<work-id>/pipeline/，events.jsonl 是唯一机器事件源；页面与 status 是可重建投影，不是另一份人工项目记忆。init 固定项目 id/name/root 与随机 run_id，不共享全局注册表或浏览器存储；不同项目、运行不共用目录。记录中不放秘密和完整日志。
+运行材料位于各项目获准的 .agent-work/<work-id>/pipeline/，各运行 events.jsonl 是唯一机器事件源；项目固定入口 .agent-work/index.html、运行页面与 status 都是可重建投影，不是另一份人工项目记忆。init 固定项目 id/name/root 与随机 run_id，不共享全局注册表或浏览器存储；不同项目、运行不共用目录。记录中不放秘密和完整日志。
 
 入口 scripts/pipeline.py，Python 标准库；预制组件 assets/observer/index.html、app.js、styles.css。默认复制到运行目录的 observer/，打开 index.html 即可；每次事件追加后在同一锁内原子更新 state.js。网页加载同目录经典脚本取得投影，不使用 file:// fetch，不启动服务/端口，不要求放宽浏览器设置。页面固定校验项目和 run_id，拒绝身份不匹配或版本倒退的数据。
 
-completed 后停止轮询与陈旧检查，自动生成单文件 report.html，内嵌样式、脚本和最终状态，无外部数据依赖。旧事件缺项目身份时保留未知，不推断；view 可刷新组件并重建投影，不改事件。若事件已追加而投影更新失败，明确报告已记录，修复后用 view 恢复，不重报事件。
+项目索引扫描该项目 .agent-work 内运行并重放非符号链接的事件日志；损坏或不可读的日志显示读取失败，不使用缓存状态。completed 显示为已归档，其他运行按最后事件时间满 7 天显示为过期，否则显示为活动。分类是事件时间视图，不探测实际进程；归档和过期不表示移动或删除文件。索引提供现存观察页和已完成报告的链接，标明演示运行。init、事件更新及 view 重建索引数据，也可用 index 命令手动重建；索引页每 5 秒读取数据并按当前时间重新分类。
+
+completed 后停止轮询与陈旧检查，自动生成单文件 report.html，内嵌样式、脚本和最终状态，无外部数据依赖。旧事件缺项目身份时保留未知，不推断；view 可刷新组件并重建投影，不改事件。若事件已追加而运行投影更新失败，明确报告已记录，修复后用 view 恢复；若索引输出失败，修复后用 index 恢复。均不重报事件。
 
 可选兼容 HTTP 服务只绑定 127.0.0.1，GET /api/state，禁止 HTTP 写入、命令执行和任意文件读取；该服务前台运行，由启动者结束，不属于默认静态路径。
 
@@ -24,6 +26,7 @@ pipeline.py decide RUN_DIR consult|return|block [--round ROUND_ID] --note TEXT [
 pipeline.py note RUN_DIR --target ID --text TEXT
 pipeline.py status RUN_DIR [--json|--mermaid]
 pipeline.py view RUN_DIR
+pipeline.py index PROJECT_ROOT
 pipeline.py serve RUN_DIR [--port PORT]
 ```
 
