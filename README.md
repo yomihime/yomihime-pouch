@@ -27,6 +27,7 @@
 | 🛠️ **Multi-agent Engineering** | 按任务选择模型，协调小切片实现、独立审查与验证。 | [查看文档](./skills/multi-agent-engineering/) |
 | 🗃️ **Project Memory** | 完整读取本地当前状态快照，改写前归档历史，用短入口恢复工作。 | [查看文档](./skills/project-memory/) |
 | 🎨 **UI Design** | 提取既有界面设计规范，并设计和验证一致的界面。 | [查看文档](./skills/ui-design/) |
+| 🧭 **yomihime init** | 检查技能可用性与版本，安全整理项目工作区。 | [查看文档](./skills/yomihime-init/) |
 
 ## 🗂️ 目录结构
 
@@ -41,6 +42,7 @@ yomihime-pouch/
 │   ├── development-pipeline/
 │   ├── interactive-planning-doc/
 │   ├── multi-agent-engineering/
+│   ├── yomihime-init/
 │   ├── project-memory/
 │   └── ui-design/
 ├── README.md

@@ -21,6 +21,10 @@ from pathlib import Path
 from urllib.parse import quote, urlsplit
 
 
+WORKSPACE_NAME = ".agent-workspace"
+WORKSPACE_RESERVED_DIRS = frozenset({"memory", "design", "plans", "work", WORKSPACE_NAME})
+
+
 class PipelineError(ValueError):
     pass
 
@@ -388,7 +392,8 @@ def mutate(run_dir, kind, **payload):
         if kind == "init":
             project_root = event.pop("project_root", None)
             if project_root is None:
-                project_root = next((p.parent for p in directory.parents if p.name == ".agent-work"), directory.parent)
+                workspace = enclosing_work_dir(directory)
+                project_root = workspace.parent if workspace is not None else directory.parent
             project_root = Path(project_root).resolve()
             require(project_root.is_dir() and directory.is_relative_to(project_root), "run directory must be inside its project root")
             identity = str(project_root)
@@ -475,7 +480,7 @@ def build_observer(run_dir):
 
 def enclosing_work_dir(directory):
     directory = Path(directory).resolve()
-    return next((p for p in (directory, *directory.parents) if p.name == ".agent-work"), None)
+    return next((p for p in (directory, *directory.parents) if p.name == WORKSPACE_NAME), None)
 
 
 def rebuild_enclosing_index(directory):
@@ -486,23 +491,26 @@ def rebuild_enclosing_index(directory):
 
 
 def build_index(work_dir):
-    """Rebuild a disposable project index from journals, never from a registry."""
+    """Index canonical work-id/pipeline journals, never backups or a registry."""
     work = Path(work_dir)
     require(not work.is_symlink(), "index directory cannot be a symlink")
-    require(work.name == ".agent-work", "index directory must be named .agent-work")
+    require(work.name == WORKSPACE_NAME, f"index directory must be named {WORKSPACE_NAME}")
     work.mkdir(parents=True, exist_ok=True)
     entries = []
     with locked(work, lock_name=".pipeline-index.lock") as work:
-        def walk_error(error):
-            entries.append({"path": str(error.filename or work), "error": str(error)})
-        for root, dirs, files in os.walk(work, followlinks=False, onerror=walk_error):
-            root = Path(root)
-            # A nested project's .agent-work has its own index and lock.
-            # Do not mix its runs into this project's index.
-            dirs[:] = sorted(d for d in dirs if d not in {"observer", ".agent-work"} and not (root / d).is_symlink())
-            if "events.jsonl" not in files:
+        for work_item in sorted(work.iterdir()):
+            if work_item.name in WORKSPACE_RESERVED_DIRS or work_item.is_symlink():
                 continue
+            root = work_item / "pipeline"
             try:
+                # A journal copied into init/staging, init/backups, memory, or a
+                # nested project is not a live project run. Explicit paths still
+                # work with run commands, but only this layout is discoverable.
+                if not work_item.is_dir() or root.is_symlink() or not root.is_dir():
+                    continue
+                journal = root / "events.jsonl"
+                if not journal.exists() and not journal.is_symlink():
+                    continue
                 state = read_state(root)
                 relative = root.relative_to(work)
                 def link(name):
@@ -699,14 +707,14 @@ def main(argv=None):
             group.add_argument("--mermaid", action="store_true")
         elif command == "serve":
             sub.add_argument("--port", type=int, default=8765)
-    index = commands.add_parser("index", help="rebuild the project .agent-work index")
-    index.add_argument("project_root", help="project root containing .agent-work")
+    index = commands.add_parser("index", help=f"rebuild the project {WORKSPACE_NAME} index")
+    index.add_argument("project_root", help=f"project root containing {WORKSPACE_NAME}")
     args = parser.parse_args(argv)
     try:
         if args.command == "index":
             project_root = Path(args.project_root).resolve()
             require(project_root.is_dir(), "project root must exist")
-            print(build_index(project_root / ".agent-work"))
+            print(build_index(project_root / WORKSPACE_NAME))
         elif args.command == "status":
             state = read_state(args.run_dir)
             print(json.dumps(state, ensure_ascii=False, indent=2) if args.json else mermaid(state) if args.mermaid else markdown(state))
