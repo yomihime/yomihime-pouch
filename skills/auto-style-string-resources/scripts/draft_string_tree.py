@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draft a UI/UX-oriented string tree for CharaPicker-style repositories.
+"""Draft a UI/UX-oriented string tree for repositories using supported layouts.
 
 This helper is intentionally heuristic. Use it to bootstrap an audit, then
 verify each candidate against real call context before proposing rewrites.
@@ -195,7 +195,7 @@ def build_tree(entries: list[Entry]) -> dict[str, dict[str, list[Entry]]]:
 
 def emit_markdown(entries: list[Entry], limit: int) -> str:
     tree = build_tree(entries)
-    lines = ["# Draft UI/UX String Tree", "", "```text", "CharaPicker strings"]
+    lines = ["# Draft UI/UX String Tree", "", "```text", "Project strings"]
     for page in sorted(tree):
         lines.append(f"├─ {page}")
         groups = tree[page]

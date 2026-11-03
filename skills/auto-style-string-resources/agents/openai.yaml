@@ -1,4 +1,4 @@
 interface:
   display_name: "Auto Style String Resources"
-  short_description: "Audit strings and batch style UI copy safely"
-  default_prompt: "Use $auto-style-string-resources to audit repo UI copy, propose style edits, and apply only confirmed changes."
+  short_description: "Audit and improve user-facing text safely"
+  default_prompt: "Use $auto-style-string-resources to audit UI copy, localization, and documentation; propose clear, natural edits while preserving meaning and constraints; and apply changes only within my authorized scope."
