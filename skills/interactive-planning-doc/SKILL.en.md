@@ -8,7 +8,7 @@ description: >-
   cleanup, version/release preparation, or when the user says not to change code
   and wants decisions written into a reusable plan document.
 metadata:
-  version: "2026-11-03T15:38:00Z"
+  version: "2026-11-03T16:26:33Z"
 ---
 
 # Interactive Planning Doc
@@ -207,7 +207,9 @@ to the relevant development milestone instead of hiding it in cleanup.
 
 ### 8. Plan Architecture Before Implementation
 
-When the plan affects code structure, name the intended boundaries:
+When the plan affects code structure, name boundaries that fit the actual system
+and requirements. The following are examples for desktop/UI applications, not
+mandatory layers for every project:
 
 - Core models and domain services.
 - Storage and path helpers.
@@ -217,9 +219,22 @@ When the plan affects code structure, name the intended boundaries:
 - Migration and backward compatibility surfaces.
 - Places where dependencies must not leak.
 
-Prefer low coupling: UI triggers work, workers run long tasks, core modules own
-business logic, storage helpers own filesystem paths, and renderers own derived
-formats.
+For such applications, UI may trigger work, workers may run long tasks, core
+modules may own business logic, storage helpers may own paths, and renderers may
+own derived formats. Choose based on platform constraints, existing architecture,
+and task evidence; do not require these layers or add modules just to fit them.
+
+When a new system, major boundary change, or architecture review needs dedicated
+design, load `architecture-design` if available in the runtime. Provide goals and
+non-goals, constraints, key quality attributes, current-state evidence, and open
+decisions. Keep accepted decisions, necessary contracts, risks, and validation
+conditions in the same main plan. When detailed architecture artifacts are useful,
+reference the existing canonical source with its baseline, status, and scope; do
+not create a parallel plan or duplicate diagram source. Select views by the
+question they answer. A design is not proof of implementation or successful
+validation. If the skill is unavailable, state the gap and plan within the
+affected code and existing documentation; do not install it automatically or
+force local changes through a full architecture process.
 
 ### 9. Add Self-Review Constraints
 

@@ -1,0 +1,513 @@
+{
+  "schemaVersion": "1.0",
+  "revision": "demo-2026-11-03",
+  "title": "示例 · 订单处理架构",
+  "summary": "公开合成示例，不描述真实项目，也不构成已实现或已验证的事实。图纸是唯一可编辑来源；此 HTML 仅为离线只读快照。",
+  "architecture": {
+    "style": "模块化单体 + 事务事件投递",
+    "rationale": "假设小团队先共享部署与事务边界；订单与库存职责分离，通过显式契约协作。只有通知跨出主事务，避免过早引入分布式协调。",
+    "alternatives": [
+      {
+        "style": "微服务",
+        "reason": "当前没有独立扩缩容或团队自治证据，暂不承担跨服务事务复杂度。"
+      },
+      {
+        "style": "纯同步通知",
+        "reason": "外部通知失败不应导致已提交的订单回滚。"
+      }
+    ]
+  },
+  "elements": [
+    {
+      "id": "system",
+      "name": "订单应用",
+      "kind": "system",
+      "status": "planned",
+      "description": "本轮计划建设的应用边界；整体部署为一个服务。",
+      "responsibilities": [
+        "协调提交订单",
+        "维护订单与库存一致性"
+      ],
+      "rules": [
+        "通知失败不撤销已确认的订单"
+      ]
+    },
+    {
+      "id": "access",
+      "name": "访问接口",
+      "kind": "module",
+      "status": "planned",
+      "parentId": "system",
+      "description": "鉴权、请求解析及错误映射；不直接写入订单或库存。",
+      "responsibilities": [
+        "认证用户",
+        "校验输入格式",
+        "转换错误码"
+      ],
+      "rules": [
+        "业务校验由订单模块负责"
+      ],
+      "contractIds": [
+        "create-order"
+      ]
+    },
+    {
+      "id": "orders",
+      "name": "订单模块",
+      "kind": "module",
+      "status": "planned",
+      "parentId": "system",
+      "description": "拥有订单状态和提交事务，协调库存预留与事务事件落盘。",
+      "responsibilities": [
+        "处理幂等提交",
+        "持久化订单",
+        "原子写入待发送事件"
+      ],
+      "contractIds": [
+        "create-order",
+        "reserve-stock"
+      ],
+      "rules": [
+        "成功返回前，订单和事件必须共同提交",
+        "不记录付款卡号或其他敏感支付数据"
+      ]
+    },
+    {
+      "id": "inventory",
+      "name": "库存模块",
+      "kind": "module",
+      "status": "planned",
+      "parentId": "system",
+      "description": "拥有库存计数和预留规则，以原子条件更新防止超卖。",
+      "responsibilities": [
+        "原子扣减可用库存",
+        "返回清晰的不足错误"
+      ],
+      "contractIds": [
+        "reserve-stock"
+      ]
+    },
+    {
+      "id": "database",
+      "name": "关系数据库",
+      "kind": "storage",
+      "status": "planned",
+      "parentId": "system",
+      "description": "示例假设订单、库存与事务事件共享事务；数据库产品暂未选择。",
+      "rules": [
+        "订单提交与事件入库必须处于同一事务"
+      ]
+    },
+    {
+      "id": "events",
+      "name": "事件投递器",
+      "kind": "worker",
+      "status": "proposed",
+      "parentId": "system",
+      "description": "候选方案：提交成功后读取待发送事件并重试通知，不影响订单事务。",
+      "rules": [
+        "按事件 ID 去重",
+        "超过重试阈值进入可观察的失败队列"
+      ]
+    },
+    {
+      "id": "notifications",
+      "name": "通知适配器",
+      "kind": "external",
+      "status": "unknown",
+      "description": "供应商、限流与重试协议尚待确认；仅保留所需边界。",
+      "rules": [
+        "不得假定支持精确一次投递"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "r-access-orders",
+      "from": "access",
+      "to": "orders",
+      "label": "提交订单",
+      "kind": "call",
+      "status": "planned",
+      "contractIds": [
+        "create-order"
+      ]
+    },
+    {
+      "id": "r-orders-inventory",
+      "from": "orders",
+      "to": "inventory",
+      "label": "预留库存",
+      "kind": "call",
+      "status": "planned",
+      "contractIds": [
+        "reserve-stock"
+      ]
+    },
+    {
+      "id": "r-orders-db",
+      "from": "orders",
+      "to": "database",
+      "label": "原子提交订单与事件",
+      "kind": "write",
+      "status": "planned"
+    },
+    {
+      "id": "r-inventory-db",
+      "from": "inventory",
+      "to": "database",
+      "label": "条件更新库存",
+      "kind": "write",
+      "status": "planned"
+    },
+    {
+      "id": "r-db-events",
+      "from": "database",
+      "to": "events",
+      "label": "轮询待发送事件",
+      "kind": "read",
+      "status": "proposed"
+    },
+    {
+      "id": "r-events-notify",
+      "from": "events",
+      "to": "notifications",
+      "label": "幂等发送 / 重试",
+      "kind": "message",
+      "status": "unknown"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "create-order",
+      "name": "提交订单",
+      "status": "planned",
+      "description": "在一次事务中完成订单、库存预留与事件记录；幂等键确保重试不创建重复订单。",
+      "inputs": [
+        {
+          "name": "idempotencyKey",
+          "type": "string",
+          "required": true,
+          "description": "同一提交保持不变。",
+          "constraints": [
+            "长度 1–128",
+            "按调用者身份隔离"
+          ]
+        },
+        {
+          "name": "items",
+          "type": "array<{sku:string,quantity:integer}>",
+          "required": true,
+          "constraints": [
+            "至少一项",
+            "quantity 为正整数",
+            "重复 SKU 在业务层合并后校验"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "confirmed",
+          "required": true
+        }
+      ],
+      "errors": [
+        {
+          "code": "INVALID_INPUT",
+          "description": "请求缺字段或数量非法",
+          "recovery": "返回字段级错误，不进入业务事务。"
+        },
+        {
+          "code": "OUT_OF_STOCK",
+          "description": "至少一个 SKU 库存不足",
+          "recovery": "回滚整个事务，返回不足项；用户修改后重新提交。"
+        },
+        {
+          "code": "IDEMPOTENCY_CONFLICT",
+          "description": "同一幂等键对应不同请求",
+          "recovery": "拒绝覆盖旧订单，提示新建提交。"
+        }
+      ],
+      "rules": [
+        "访问接口负责格式校验，订单模块负责业务校验",
+        "事务提交之前不调用外部通知",
+        "幂等键命中且请求相同则返回既有结果"
+      ],
+      "stateTransitions": [
+        {
+          "from": "draft",
+          "to": "confirmed",
+          "trigger": "库存预留与订单事务提交成功"
+        },
+        {
+          "from": "draft",
+          "to": "rejected",
+          "trigger": "输入校验失败或库存不足"
+        }
+      ],
+      "examples": [
+        {
+          "name": "正常提交",
+          "input": {
+            "idempotencyKey": "demo-01",
+            "items": [
+              {
+                "sku": "DEMO-BOOK",
+                "quantity": 1
+              }
+            ]
+          },
+          "output": {
+            "orderId": "order-demo-01",
+            "status": "confirmed"
+          }
+        },
+        {
+          "name": "库存不足",
+          "input": {
+            "idempotencyKey": "demo-02",
+            "items": [
+              {
+                "sku": "DEMO-BOOK",
+                "quantity": 999999
+              }
+            ]
+          },
+          "output": {
+            "error": "OUT_OF_STOCK",
+            "retryable": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "reserve-stock",
+      "name": "预留库存",
+      "status": "planned",
+      "description": "仅在订单事务内执行，以条件更新保证库存不会被并发扣成负数。",
+      "inputs": [
+        {
+          "name": "sku",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "required": true,
+          "constraints": [
+            "大于 0"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "reservationId",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "errors": [
+        {
+          "code": "OUT_OF_STOCK",
+          "description": "可用数量不足",
+          "recovery": "不部分扣减，交订单模块回滚。"
+        }
+      ],
+      "rules": [
+        "不独立提交外层事务",
+        "重复调用由订单幂等边界去重"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow-submit",
+      "name": "提交订单：成功、失败与恢复",
+      "status": "planned",
+      "description": "分支是互斥结果，不表示两个分支都会执行；外部通知在主事务完成之后运行。",
+      "steps": [
+        {
+          "id": "validate",
+          "name": "解析与鉴权",
+          "elementId": "access",
+          "description": "输入格式校验通过后进入订单边界。",
+          "contractIds": [
+            "create-order"
+          ]
+        },
+        {
+          "id": "reserve",
+          "name": "预留库存",
+          "elementId": "inventory",
+          "contractIds": [
+            "reserve-stock"
+          ]
+        },
+        {
+          "id": "commit",
+          "name": "提交订单与事件",
+          "elementId": "orders",
+          "description": "同一事务原子提交。"
+        },
+        {
+          "id": "reject",
+          "name": "回滚并返回不足项",
+          "elementId": "orders",
+          "outcome": "failure",
+          "description": "整个订单失败，不留下部分扣减。"
+        },
+        {
+          "id": "notify",
+          "name": "发送订单通知",
+          "elementId": "events",
+          "description": "提交后的候选异步路径。",
+          "status": "proposed"
+        },
+        {
+          "id": "retry",
+          "name": "重试 / 失败队列",
+          "elementId": "events",
+          "outcome": "recovery",
+          "description": "有界重试与可观察失败，不回滚订单。",
+          "status": "proposed"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "validate",
+          "to": "reserve",
+          "label": "格式合法",
+          "outcome": "normal"
+        },
+        {
+          "from": "reserve",
+          "to": "commit",
+          "label": "库存充足",
+          "condition": "所有 SKU 可原子预留",
+          "outcome": "normal"
+        },
+        {
+          "from": "reserve",
+          "to": "reject",
+          "label": "库存不足",
+          "condition": "任一 SKU 不足",
+          "outcome": "failure"
+        },
+        {
+          "from": "commit",
+          "to": "notify",
+          "label": "事务已提交",
+          "outcome": "normal",
+          "status": "proposed"
+        },
+        {
+          "from": "notify",
+          "to": "retry",
+          "label": "通知失败",
+          "outcome": "recovery",
+          "status": "proposed"
+        },
+        {
+          "from": "retry",
+          "to": "notify",
+          "label": "预算内重试",
+          "condition": "未超过重试阈值",
+          "outcome": "recovery",
+          "status": "proposed"
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "id": "overview",
+      "name": "整体架构",
+      "kind": "overview",
+      "description": "主要责任边界、存储与外部依赖。颜色表示事实状态，不表示审批。",
+      "elementIds": [
+        "access",
+        "orders",
+        "inventory",
+        "database",
+        "events",
+        "notifications"
+      ],
+      "relationshipIds": [
+        "r-access-orders",
+        "r-orders-inventory",
+        "r-orders-db",
+        "r-inventory-db",
+        "r-db-events",
+        "r-events-notify"
+      ]
+    },
+    {
+      "id": "module-orders",
+      "name": "订单模块",
+      "kind": "module",
+      "description": "仅展开本轮实现相关的提交、库存与存储边界。",
+      "elementIds": [
+        "access",
+        "orders",
+        "inventory",
+        "database"
+      ],
+      "relationshipIds": [
+        "r-access-orders",
+        "r-orders-inventory",
+        "r-orders-db",
+        "r-inventory-db"
+      ]
+    },
+    {
+      "id": "flow-view-submit",
+      "name": "提交处理流程",
+      "kind": "flow",
+      "flowId": "flow-submit",
+      "description": "包含关键失败与恢复路径；点击步骤查看对应模块和接口。"
+    }
+  ],
+  "changes": [
+    {
+      "id": "change-submit",
+      "name": "实现订单提交闭环",
+      "status": "planned",
+      "decision": "draft",
+      "verification": "unverified",
+      "description": "示例目标设计尚未审批或实施。建议落点仅为候选，不是已有代码证据。",
+      "elementIds": [
+        "access",
+        "orders",
+        "inventory",
+        "database"
+      ],
+      "contractIds": [
+        "create-order",
+        "reserve-stock"
+      ],
+      "flowIds": [
+        "flow-submit"
+      ],
+      "acceptance": [
+        "同一幂等键重复提交只产生一笔订单",
+        "并发提交不会造成库存负数",
+        "任一库存不足时订单、库存和事件整体回滚",
+        "通知失败不改变已确认订单状态"
+      ],
+      "extensions": {
+        "demo.suggestedFiles": [
+          "src/orders/service",
+          "src/inventory/repository",
+          "tests/order_submission"
+        ]
+      }
+    }
+  ]
+}

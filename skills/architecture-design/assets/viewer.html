@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>项目架构 · Architecture</title>
+  <style>@@VIEWER_CSS@@</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至架构视图</a>
+  <div id="architecture-app"></div>
+  <noscript><p class="fatal">此离线架构视图需要 JavaScript。原始设计数据保存在本文件内，不会发送到网络。</p></noscript>
+  <script id="architecture-data" type="application/json">@@ARCHITECTURE_DATA@@</script>
+  <script id="render-metadata" type="application/json">@@RENDER_METADATA@@</script>
+  <script>@@VIEWER_JS@@</script>
+</body>
+</html>

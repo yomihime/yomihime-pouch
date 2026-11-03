@@ -8,7 +8,7 @@ description: >-
   acceptance cleanup, version/release preparation, or when the user asks to
   avoid code changes and capture decisions in a reusable execution plan.
 metadata:
-  version: "2026-11-03T15:38:00Z"
+  version: "2026-11-03T16:26:33Z"
 ---
 
 # Interactive Planning Doc
@@ -148,7 +148,7 @@ metadata:
 
 ### 8. 规划架构边界
 
-计划涉及代码结构时，提前命名边界：
+计划涉及代码结构时，根据实际系统与需求提前命名边界；以下是桌面/界面型应用的示例，不是所有项目必须采用的分层：
 
 - 核心模型和领域服务。
 - 存储与路径 helper。
@@ -158,7 +158,9 @@ metadata:
 - 迁移与旧数据兼容面。
 - 依赖不得泄漏的位置。
 
-保持低耦合：UI 触发工作，worker 执行耗时任务，core 承担业务逻辑，storage helper 负责文件系统路径，renderer 负责派生产物格式。
+该类应用可采用 UI 触发工作、worker 执行耗时任务、core 承担业务逻辑、storage helper 管理路径、renderer 生成派生产物的职责划分；是否适用须由平台约束、现有架构和任务证据决定，不强制新增这些层或模块。
+
+新系统、重大边界变化或架构审查需要专门设计时，若运行时可用则加载 `architecture-design`，提供目标/非目标、约束、关键质量属性、现状证据和待决问题。将已接受决定、必要契约、风险和验证条件归入同一个主计划；需要详细架构产物时引用已有权威来源及其基准/状态/范围，不另建平行计划或重复图源。视图按问题选取，架构方案不等于实现或验证已通过；缺少该技能时说明缺口，依据受影响代码和已有文档做有界规划，不自行安装，也不让局部修改承担完整架构流程。
 
 ### 9. 加入自审查约束
 
