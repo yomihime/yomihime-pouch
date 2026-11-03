@@ -36,6 +36,8 @@ description: >-
 
 同轮独立任务的实现与自检可交叠；检查点等待本轮任务达到条件，跨轮严格按通过结果推进，最终验收针对集成候选。阶段过程状态与 passed/failed/skipped/unrun 分开，不能用“阶段已结束”覆盖失败。
 
+源码工作使用主仓库主 checkout；并行写入按互不重叠的文件范围分配，共享文件指定唯一 writer。完成的 Agent 先交接并接收结果、证据和写入权，再按运行时能力回收，材料仅在确认不再占用且获得清理授权后处理；详见 [多 Agent 工程协作](../multi-agent-engineering/SKILL.md)。
+
 失败进入 needs_decision，禁止开始新工作或推进轮次；此前已 running 的任务仍可提交 passed/failed，保留该 attempt 的候选和证据。在 needs_decision、consulting 或 blocked 期间接收这些终态，不改变未解决失败或已有决策状态。主调度者先收齐已完成结果，再选择顾问、返回或阻塞；实际取消/交接的未完成任务以备注记明事实。返回保留历史，创建新 attempt，并重置目标轮次及下游结果；它不是 Git reset、数据回滚或自动终止进程。顾问按具体问题调用，遵守已有模型与预算边界。
 
 ## 质量控制
