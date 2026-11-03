@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Design"
+  short_description: "提取现有设计规范，设计并验证界面"
+  default_prompt: "使用 $ui-design 检查实际界面和现有规范，区分现状与建议；保持既有视觉与行为，只在我授权的范围内设计或修改，并说明验证结果。"
