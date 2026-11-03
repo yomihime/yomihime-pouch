@@ -8,7 +8,7 @@ description: >-
   cleanup, version/release preparation, or when the user says not to change code
   and wants decisions written into a reusable plan document.
 metadata:
-  version: "2026-11-03T15:05:00Z"
+  version: "2026-11-03T15:38:00Z"
 ---
 
 # Interactive Planning Doc
@@ -41,7 +41,8 @@ screenshots in that task's `scratch/` directory, for example
 `.agent-workspace/feature-search/plan.md`. Read applicable `AGENTS.md` instructions
 and existing task entries first, then reuse one main plan. Do not create duplicate
 authorities, default duplicate rules, or empty files just to fill a template.
-Choose a recognizable work ID that does not collide with existing work. Deliver
+Choose a recognizable work ID that does not collide with existing work. It must not use
+`memory`, `design`, `plans`, `work`, or other names reserved by existing tools. Deliver
 formal planning documents, product docs, or publication artifacts to the user's
 specified destination; do not force those deliverables into a private workspace.
 

@@ -67,6 +67,39 @@ class PlanningContractTests(unittest.TestCase):
         self.assertIn("已知 bug 已修复", self.chinese)
         self.assertIn("Known bugs are fixed", self.english)
 
+    def test_both_languages_exclude_tasks_that_do_not_need_planning(self):
+        cases = (
+            (self.chinese, "不适用场景", (
+                r"简短回答.*命令输出.*代码解释",
+                r"直接实现.*未要求.*计划.*方案.*架构文档",
+                r"局部 bug 修复.*不需要.*里程碑.*提交节奏.*验收标准.*收尾规划",
+                r"完整计划.*只要求.*执行.*计划本身需要更新",
+            )),
+            (self.english, "When Not to Use This Skill", (
+                r"short answer, command output, or code explanation",
+                r"asks for implementation.*does not ask for a plan.*proposal.*architecture document",
+                r"local bug fix.*does not need.*milestones.*commit\s+cadence.*acceptance criteria.*cleanup planning",
+                r"complete plan.*only asks for code execution.*plan itself needs to be updated",
+            )),
+        )
+        for text, heading, patterns in cases:
+            with self.subTest(heading=heading):
+                section = re.search(
+                    rf"(?m)^## {re.escape(heading)}\n(.*?)(?=\n## |\Z)",
+                    text, re.S,
+                )
+                self.assertIsNotNone(section, f"Missing exclusions: {heading}")
+                for pattern in patterns:
+                    self.assertRegex(section.group(1), re.compile(pattern, re.S))
+
+    def test_both_languages_reserve_managed_work_ids(self):
+        names = (r"`memory`", r"`design`", r"`plans`", r"`work`")
+        self.assertTrue(has_paragraph(
+            self.chinese, r"<work-id>", r"不得占用", *names, r"已有工具保留名称"))
+        self.assertTrue(has_paragraph(
+            self.english, r"work ID", r"must not use", *names,
+            r"other names reserved by existing tools"))
+
     def test_cleanup_keeps_main_plan_and_unrelated_edits(self):
         self.assertTrue(has_paragraph(
             self.chinese, r"只清理本次创建", r"不删除.*主计划", r"已有用户文件"))

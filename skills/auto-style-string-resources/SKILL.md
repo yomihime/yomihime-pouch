@@ -2,7 +2,7 @@
 name: auto-style-string-resources
 description: Audit, classify, rewrite, and batch-apply user-facing program text in a repository, including UI strings, i18n resources, README and documentation. Use for 整理字串, 统一文案风格, 风格化 UI 文案, 审计 i18n 文案, locating hardcoded display text, or improving product wording in Chinese, Japanese, or other languages. Inspect actual usage and preserve facts, risks, uncertainty, placeholders, and runtime contracts.
 metadata:
-  version: "2026-11-03T15:05:00Z"
+  version: "2026-11-03T15:38:00Z"
 ---
 
 # Auto Style String Resources
@@ -129,7 +129,7 @@ metadata:
 
 修改后输出已改文件和范围、before/after 清单、每项 `style_score` 与处理等级、必要说明、跳过项及原因、已知风险和仍需确认的文案。常规低风险项不逐条写理由。
 
-运行与修改相关的轻量检查，例如解析受影响的 JSON、检查链接与格式约束，并核对真实调用上下文；报告命令和结果。若无法运行验证，说明原因。脚本不能证明语义、语言自然度或行为正确。
+运行与修改相关的轻量检查，例如解析受影响的 JSON、检查链接与格式约束，并核对真实调用上下文；报告命令和结果。改动控件文案时，若能安全运行界面，检查受影响语言和状态下的换行、截断、溢出及可访问名称；无法检查时明确列为未验证。布局修复仍需符合原有授权范围。脚本不能证明语义、语言自然度或行为正确。
 
 如改动影响长期文案规范、术语或 i18n 工作流，按上述规则提出或经授权更新项目指南及相关文档；仅在用户授权时修改 `AGENTS.md`。
 

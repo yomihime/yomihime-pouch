@@ -82,6 +82,10 @@ class GuideDocumentationTests(unittest.TestCase):
             with self.subTest(marker=marker):
                 self.assertRegex(guide, marker)
 
+    def test_control_copy_validation_includes_visual_limits(self):
+        self.assertIsNotNone(paragraph_containing(
+            self.skill, r"控件文案", r"安全运行", r"换行", r"截断", r"可访问名称", r"未验证", r"授权范围"))
+
 
 if __name__ == "__main__":
     unittest.main()
