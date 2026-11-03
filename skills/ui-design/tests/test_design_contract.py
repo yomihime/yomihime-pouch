@@ -84,6 +84,28 @@ class DesignSkillStructureTests(unittest.TestCase):
         self.assertTrue(has_paragraph(self.skill, r"保留已有内容", r"授权", r"局部"))
         self.assertTrue(has_paragraph(self.skill, r"AGENTS\.md", r"保留", r"简短", r"实际路径", r"不可读", r"不擅自重建"))
 
+    def test_project_design_directory_is_example_not_migration(self):
+        # Each assertion ties related terms to one paragraph, but is not a
+        # behavioral test of whether an agent follows the documented policy.
+        self.assertTrue(has_paragraph(
+            self.skill, r"没有更适用的既定位置", r"默认提议",
+            r"\.local-dev/design/ui-guide\.md", r"已有指南|项目约定"))
+        self.assertTrue(has_paragraph(
+            self.skill, r"按需.*同目录.*resources\.md",
+            r"同级.*writing-guide\.md", r"不要求一次性创建全部文件"))
+        self.assertTrue(has_paragraph(
+            self.skill, r"已有指南", r"不迁移、复制或重建",
+            r"不制造多份权威内容", r"授权"))
+        self.assertTrue(has_paragraph(
+            self.skill, r"权威", r"引用", r"不复制|不重复", r"不.*迁移"))
+        self.assertTrue(has_paragraph(
+            self.skill, r"按需读取项目现有资源记录",
+            r"例如.*\.local-dev/design/resources\.md", r"项目记录", r"不替代.*许可"))
+        self.assertTrue(has_paragraph(
+            read(SKILL / "README.md"), r"已有|现有", r"约定", r"不自动迁移",
+            r"\.local-dev/design/ui-guide\.md", r"同目录.*resources\.md",
+            r"同级.*writing-guide\.md", r"不要求全部创建"))
+
     def test_resource_limit_and_license_provenance(self):
         self.assertTrue(has_paragraph(self.skill, r"每次用户请求最多获取一个资源库", r"来源", r"版本", r"许可证"))
         self.assertTrue(has_paragraph(self.resources, r"每次用户请求最多获取一个资源库", r"来源 URL", r"版本|访问日期", r"许可证", r"归属声明"))
