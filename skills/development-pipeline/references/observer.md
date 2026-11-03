@@ -25,7 +25,7 @@
 
 ## 一次初始化，直接打开文件
 
-下列 init 子命令只创建一次流水线运行，不代替 project-init 的项目盘点与安全整理。项目根自动识别和项目索引只采用统一工作区，不查找旧目录、建立别名或自动迁移；旧项目下次开工时先处理 project-init 报告的材料与路径冲突。
+下列 init 子命令只创建一次流水线运行，不代替 yomihime-init 的项目盘点与安全整理。项目根自动识别和项目索引只采用统一工作区，不查找旧目录、建立别名或自动迁移；旧项目下次开工时先处理 yomihime-init 报告的材料与路径冲突。
 
 ```powershell
 $pipeline = "skills/development-pipeline/scripts/pipeline.py"

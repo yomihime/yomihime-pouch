@@ -14,4 +14,4 @@
 | `multi-agent-engineering` | 按任务选择模型，协调小切片实现、独立审查与验证。 | [multi-agent-engineering](./multi-agent-engineering/) |
 | `project-memory` | 完整读取本地当前状态快照，改写前归档历史，用短入口恢复工作。 | [project-memory](./project-memory/) |
 | `ui-design` | 提取现有界面规范，设计和验证一致、可访问的界面。 | [ui-design](./ui-design/) |
-| `project-init` | 检查技能可用性与版本，安全整理项目工作区。 | [project-init](./project-init/) |
+| `yomihime-init` | 检查技能可用性与版本，安全整理项目工作区。 | [yomihime-init](./yomihime-init/) |

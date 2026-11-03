@@ -1,0 +1,4 @@
+interface:
+  display_name: "yomihime init"
+  short_description: "检查技能源与版本，安全初始化统一工作区并整理旧项目的 Agent 材料"
+  default_prompt: "调用 yomihime-init 技能，先检查 GitHub 技能源，再盘点并安全更新本地技能，初始化 .agent-workspace，并保留原件与证据地整理旧项目材料，不修改项目代码。"

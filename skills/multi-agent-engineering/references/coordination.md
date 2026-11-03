@@ -12,7 +12,7 @@
 
 ## 只展示受管路径
 
-项目本地材料统一使用 .agent-workspace，下列路径按需生成，不创建空模板树，不覆盖既有内容。旧项目材料由 project-init 在下次开工时先盘点，再按授权安全整理，不设旧目录回退或双写。AGENTS.md 保留人工指导，tracked/override 冲突按 project-memory 或当前有效指导处理。未采用 project-memory 时不强制创建记忆目录。
+项目本地材料统一使用 .agent-workspace，下列路径按需生成，不创建空模板树，不覆盖既有内容。旧项目材料由 yomihime-init 在下次开工时先盘点，再按授权安全整理，不设旧目录回退或双写。AGENTS.md 保留人工指导，tracked/override 冲突按 project-memory 或当前有效指导处理。未采用 project-memory 时不强制创建记忆目录。
 
 ```text
 AGENTS.md

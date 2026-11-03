@@ -1,6 +1,6 @@
 # 当前状态与归档结构
 
-统一在 `.agent-workspace/memory/current.md` 维护一份完整当前快照。未知项写“未核实”，不通过猜测填满模板；初始化前先通过隐私检查。旧项目材料由 project-init 先盘点并安全整理，再让有效入口指向该唯一现状，不保留旧目录读取回退、双写或多个阶段记录拼接状态。
+统一在 `.agent-workspace/memory/current.md` 维护一份完整当前快照。未知项写“未核实”，不通过猜测填满模板；初始化前先通过隐私检查。旧项目材料由 yomihime-init 先盘点并安全整理，再让有效入口指向该唯一现状，不保留旧目录读取回退、双写或多个阶段记录拼接状态。
 
 ## 文件职责
 
@@ -49,7 +49,7 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
     artifacts.md                  按需：关键产物和保留去向
 ```
 
-目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 避免与 memory、design、plans、work 及已有受管文件重名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 project-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
+目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 避免与 memory、design、plans、work 及已有受管文件重名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 yomihime-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
 
 memory/ 下的 references/ 存较长知识细节，evidence/ 存长期原始依据，archive/ 存改写前的记忆旧版；任务回报和临时材料留各 work-id 工作区。恢复必需的目标、约束、核心架构、结果与下一步仍直接写在 current.md。工作区计划描述如何执行，不能替代完整项目现状。采用观察器时，current.md 只归并有效轮次/attempt、候选、结果与下一步并引用运行目录，不复制完整事件流；事件投影不作为另一份人工项目记忆。
 

@@ -45,7 +45,7 @@ Choose a recognizable work ID that does not collide with existing work. Deliver
 formal planning documents, product docs, or publication artifacts to the user's
 specified destination; do not force those deliverables into a private workspace.
 
-Let `init` inventory and safely consolidate legacy directories and entries during
+Let `yomihime-init` inventory and safely consolidate legacy directories and entries during
 project initialization. Do not maintain long-term compatibility paths or fallback
 lookups. Preserve existing plans, guides, and manual edits without overwriting;
 report conflicts and obtain confirmation before resolving them, verify the new

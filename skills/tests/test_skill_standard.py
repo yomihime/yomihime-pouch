@@ -9,6 +9,17 @@ SKILLS = Path(__file__).resolve().parents[1]
 
 
 class SkillStandardTests(unittest.TestCase):
+    def test_yomihime_init_identity_and_agent_execution(self):
+        root = SKILLS / 'yomihime-init'
+        skill = (root / 'SKILL.md').read_text(encoding='utf-8')
+        interface = (root / 'agents' / 'openai.yaml').read_text(encoding='utf-8')
+        self.assertIn('name: yomihime-init', skill)
+        self.assertIn('不是已安装的 shell 命令', skill)
+        self.assertIn('不自带联网程序', skill)
+        self.assertIn('由使用该技能的 Agent', skill)
+        self.assertIn('display_name: "yomihime init"', interface)
+        self.assertNotIn('project-init', interface)
+
     def test_each_skill_has_utc_version_and_license(self):
         entries = sorted(SKILLS.glob('*/SKILL.md'))
         self.assertTrue(entries)
@@ -35,7 +46,7 @@ class SkillStandardTests(unittest.TestCase):
     def test_legacy_paths_only_appear_in_init_migration_guidance(self):
         old = ('.agent-work/', '.project-memory/', '.local-dev/', '.local_dev/')
         for root in sorted(p.parent for p in SKILLS.glob('*/SKILL.md')):
-            if root.name == 'project-init':
+            if root.name == 'yomihime-init':
                 continue
             for path in root.rglob('*.md'):
                 with self.subTest(file=str(path)):
