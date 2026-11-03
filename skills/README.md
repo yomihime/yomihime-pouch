@@ -10,3 +10,4 @@
 | `development-pipeline` | 需求切片、顺序轮次与并行任务、检查点验收及实时观察。 | [development-pipeline](./development-pipeline/) |
 | `multi-agent-engineering` | 按任务选择模型，协调小切片实现、独立审查与验证。 | [multi-agent-engineering](./multi-agent-engineering/) |
 | `project-memory` | 完整读取本地当前状态快照，改写前归档历史，用短入口恢复工作。 | [project-memory](./project-memory/) |
+| `ui-design` | 提取现有界面规范，设计和验证一致、可访问的界面。 | [ui-design](./ui-design/) |

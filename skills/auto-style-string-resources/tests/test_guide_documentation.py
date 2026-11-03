@@ -47,8 +47,21 @@ class GuideDocumentationTests(unittest.TestCase):
         self.assertParagraph(r"没有指南", r"分析", r"授权", r"local-dev", r"不强制")
         self.assertParagraph(r"已有文件", r"授权", r"不自动覆盖")
 
+    def test_example_design_layout_keeps_responsibilities_distinct(self):
+        # This is an example convention, not a mandate to create these files.
+        for marker in (r"\.local-dev/design/writing-guide\.md", r"ui-guide\.md", r"resources\.md"):
+            with self.subTest(marker=marker):
+                self.assertRegex(self.guide, marker)
+        self.assertRegex(self.guide, r"resources\.md[^\n]*(可选|按需|需要时)|(可选|按需|需要时)[^\n]*resources\.md")
+        self.assertRegex(self.guide, r"示例|例如")
+        self.assertRegex(self.guide, r"现有.*约定|已有.*约定")
+        self.assertRegex(self.guide, r"不.*迁移")
+        self.assertRegex(self.guide, r"不.*(重复|复制)|避免.*(重复|多份)")
+        self.assertRegex(self.guide, r"已有指南.*(参考|沿用)")
+        self.assertParagraph(r"ui-guide\.md", r"resources\.md", r"按需|可选|不是必需")
+
     def test_guide_is_persistent_work_cleanup_is_narrow(self):
-        self.assertParagraph(r"style-guide\.md", r"持久", r"不删除指南")
+        self.assertParagraph(r"指南", r"持久", r"不删除指南")
         self.assertParagraph(r"临时", r"清理", r"自建", r"不删除用户已有")
         self.assertParagraph(r"不放密钥", r"隐私|敏感")
 
