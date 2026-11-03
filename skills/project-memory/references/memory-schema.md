@@ -11,7 +11,7 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
     current.md                    完整现状；主调度者/单 Agent 恢复时全文读取
     references/                   按需：较长有效知识，不是第二份现状
       code-map.md                 总代码地图：职责、入口、符号、验证与子图路由
-      architecture.md             已核验现状架构、契约和数据流图纸
+      architecture.md             经证据核验的现状说明；采用标准 JSON 时引用源而非复制契约
       maps/<scope-id>.md          按需：复杂领域子地图
       drawings/<topic-id>.md      按需：独立专题图纸
     evidence/<evidence-id>/       按需：长期结论所需的必要原始证据
@@ -19,6 +19,8 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
     archive/<时间戳>-<唯一标识>/   每次改写前保存的旧版，不默认读取
       manifest.md                 本次归档的来源、校验值与更新原因
       <原相对路径>                旧文件的原始内容
+  architecture/                   按需：跨任务稳定架构源；已有有效源原位复用
+    architecture.json             采用 architecture-design 且无有效源时建立，逐项记录状态
   design/                         按需：持久设计指南，由对应技能维护
     ui-guide.md
     writing-guide.md
@@ -42,18 +44,20 @@ AGENTS.md                         短入口：稳定约束、必要环境边界�
       task.md                     任务约定、实例映射与有效输入入口
       agents/<instance-id>/
         inputs/                   固定版本任务包和增量
-        results/                  角色原始回报、目标图纸等产物
+        results/                  角色回报、图纸建议与差异；采用标准源时不另建权威
         checkpoints/              按需：交接停止点与待办
         evidence/<candidate-id>/  本实例现场证据
         scratch/                  临时脚本和中间材料
     artifacts.md                  按需：关键产物和保留去向
 ```
 
-目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 避免与 memory、design、plans、work 及已有受管文件重名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 yomihime-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
+目录图只列受管材料，按需内容不预建，不假设项目源码布局。work-id 避免与 memory、architecture、design、plans、work 及已有受管文件重名。源码默认在主仓库的主 checkout 中维护，并行 Agent 分配互不重叠的文件写入范围；`.agent-workspace/` 不存源码 checkout。跨仓库工作确需 worktree 时，仅使用一个共享 worktree，放在主仓库根目录下可见位置，绝不放入 `.agent-workspace/`。旧材料的整理先经 yomihime-init 核对来源、冲突与引用，不为套模板盲目搬动用户文件。只读短任务可在会话完成，不要求创建目录树。
 
 memory/ 下的 references/ 存较长知识细节，evidence/ 存长期原始依据，archive/ 存改写前的记忆旧版；任务回报和临时材料留各 work-id 工作区。恢复必需的目标、约束、核心架构、结果与下一步仍直接写在 current.md。工作区计划描述如何执行，不能替代完整项目现状。采用观察器时，current.md 只归并有效轮次/attempt、候选、结果与下一步并引用运行目录，不复制完整事件流；事件投影不作为另一份人工项目记忆。
 
 地图与图纸的范围、核验基准、加载和失效规则按 [知识交接与协作](collaboration.md)；同一契约细节只保留一个维护位置。Agent ID 写入实例映射，同任务同线程复用目录，新线程接替创建新实例并引用检查点，不复制全部旧产物。
+
+采用 architecture-design 并确认 JSON 权威后，同一设计范围跨任务共用一份标准 JSON 机器源，现状、目标、决定与实现/验证情况按对象逐项标识，不用整张图的状态代替证据。没有既有有效源时才按需在 `architecture/` 建立稳定源；已有权威源不因路径模板而复制或搬迁。`memory/references/architecture.md` 保留经证据确认的项目现状说明，当前快照保留恢复必需的架构结论，两者引用实际 JSON 路径、修订和相关对象 ID，不复制完整契约或另维护 Mermaid 真源。已有 Markdown 若仍是正式权威，先保留原文并协调获准转换范围，不能自动降级。任务结果保存建议、差异和报告，HTML 只是派生快照；迁移、替换或覆盖既有源须明确授权并核验引用与恢复依据。未采用该技能时仍可按原协议维护有证据的现状材料，不强制转换格式。
 
 ## 短入口：AGENTS.md
 
@@ -106,7 +110,7 @@ memory/ 下的 references/ 存较长知识细节，evidence/ 存长期原始依�
 
 ### 4. 当前架构与工作入口
 
-直接说明相关模块职责、接口/契约、依赖方向、主要数据流，以及程序、配置和测试入口。使用路径/符号定位细节，不复制函数实现；为受影响区域保留核验版本和未提交变更证据。
+直接说明相关模块职责、接口/契约的关键事实、依赖方向、主要数据流，以及程序、配置和测试入口。采用标准 JSON 架构源时引用其实际路径、修订和对象 ID，不复制详细契约表，也不让链接代替恢复必需的现状结论。使用路径/符号定位细节，不复制函数实现；为受影响区域保留核验版本和未提交变更证据。
 
 ### 5. 当前有效的调试知识
 

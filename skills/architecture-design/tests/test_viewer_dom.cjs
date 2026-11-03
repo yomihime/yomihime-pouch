@@ -1,39 +1,51 @@
-// Optional Node.js 18+ interaction test; no npm packages required.
-// A small DOM mock, not real-browser, layout, file://, or CSP validation.
+// Optional Node.js 18+ DOM logic tests, no npm packages.
 // Run: node tests/test_viewer_dom.cjs
-const fs = require('fs'); const vm = require('vm'); const assert = require('assert');
+// These are not browser/layout/file://CSP verification.
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert');
+const base=path.resolve(__dirname, '..');
 class Element {
- constructor(tag){this.tagName=tag;this.children=[];this.attributes={};this.listeners={};this.style={};this._text='';this.className='';this.clientWidth=800;this.value='';this.classList={toggle:(name,force)=>{const set=new Set(this.className.split(' '));if(force)set.add(name);else set.delete(name);this.className=[...set].join(' ')},contains:name=>this.className.split(' ').includes(name)};}
- set textContent(text){this._text=String(text);this.children=[];}
- get textContent(){return this._text+this.children.map(x=>x.textContent).join('');}
- appendChild(child){this.children.push(child);return child;}
- replaceChildren(...children){this.children=children;this._text='';}
- setAttribute(k,v){this.attributes[k]=String(v);if(k==='class')this.className=String(v);}
- getAttribute(k){return this.attributes[k]??null;}
- removeAttribute(k){delete this.attributes[k];}
- addEventListener(type,fn){this.listeners[type]=fn;}
- click(){this.listeners.click?.({});}
- focus(){document.activeElement=this;}
- querySelector(tag){return all(this).find(x=>x.tagName===tag)||null;}
+ constructor(tag){this.tagName=tag;this.children=[];this.attributes={};this.listeners={};this.style={};this._text='';this.className='';this.clientWidth=800;this.value='';this.scrollTop=0;this.scrollLeft=0;this.disabled=false;this.hidden=false;this.open=false;this.classList={toggle:(name,force)=>{const set=new Set(this.className.split(' '));if(force)set.add(name);else set.delete(name);this.className=[...set].join(' ')},contains:name=>this.className.split(' ').includes(name)};}
+ set textContent(text){this._text=String(text);this.children=[];} get textContent(){return this._text+this.children.map(x=>x.textContent).join('');}
+ appendChild(child){this.children.push(child);return child;}replaceChildren(...children){this.children=children;this._text='';}
+ setAttribute(k,v){this.attributes[k]=String(v);if(k==='class')this.className=String(v);}getAttribute(k){return this.attributes[k]??null;}removeAttribute(k){delete this.attributes[k];}
+ addEventListener(type,fn){this.listeners[type]=fn;}click(){if(!this.disabled)this.listeners.click?.({});}focus(){document.activeElement=this;}querySelector(tag){return all(this).find(x=>x.tagName===tag)||null;}
 }
 function all(root){return [root,...root.children.flatMap(all)];}
-const base=require('path').resolve(__dirname, '..');
-const data=JSON.parse(fs.readFileSync(base+'/assets/demo.json','utf8'));
-const root=new Element('root');const json=new Element('script');json.textContent=JSON.stringify(data);
-const meta=new Element('script');meta.textContent=JSON.stringify({warnings:['demo warning'],sourceName:'demo.json',sourceSha256:'test',assetsSha256:'test'});
-const document={getElementById:id=>({'architecture-app':root,'architecture-data':json,'render-metadata':meta})[id],createElement:tag=>new Element(tag),createElementNS:(_,tag)=>new Element(tag),activeElement:null};
-const context={document,window:{innerWidth:1500,addEventListener(){}},ResizeObserver:class{observe(){}},requestAnimationFrame:fn=>fn(),console};
-vm.runInNewContext(fs.readFileSync(base+'/assets/viewer.js','utf8'),context);
-const byClass=cls=>all(root).filter(x=>x.classList.contains(cls));
-const nodes=()=>byClass('node');const nav=()=>byClass('nav-button');const panel=()=>byClass('detail-panel')[0];
-assert.equal(nav().length,3);assert.equal(nodes().length,data.views[0].elementIds.length);assert(nodes().every(n=>n.getAttribute('aria-pressed')==='false'));
-nodes()[1].click();assert.equal(nodes()[1].getAttribute('aria-pressed'),'true');assert(panel().textContent.includes(data.elements.find(x=>x.id===data.views[0].elementIds[1]).name));
-nav()[1].click();assert.equal(nodes().length,data.views[1].elementIds.length);
-nav()[2].click();assert.equal(nodes().length,data.flows[0].steps.length);
-const proposedIndex=data.flows[0].steps.findIndex(x=>x.status==='proposed');assert(proposedIndex>=0);assert(nodes()[proposedIndex].textContent.includes('提议'));nodes()[proposedIndex].click();assert(panel().textContent.includes('步骤状态：提议'));
-const search=all(root).find(x=>x.tagName==='input');search.value='no-match-should-exist';search.listeners.input();assert.equal(byClass('is-dimmed').length,nodes().length);search.value='';search.listeners.input();assert.equal(byClass('is-dimmed').length,0);
-nodes()[0].focus();nodes()[0].listeners.keydown({key:'ArrowDown',preventDefault(){}});assert.equal(document.activeElement,nodes()[1]);nodes()[1].listeners.keydown({key:'Escape'});assert(nodes().every(n=>n.getAttribute('aria-pressed')==='false'));
-nav()[1].click();nodes().find(n=>n.textContent.includes('订单模块')).click();const contract=all(panel()).find(n=>n.classList.contains('detail-link')&&n.textContent.includes('create-order'));assert(contract);contract.click();assert(panel().textContent.includes('输入 / INPUT'));assert(panel().textContent.includes('状态转移 / STATES'));assert.equal(document.activeElement.tagName,'h2');byClass('back-button')[0].click();assert(panel().textContent.includes('订单模块'));
-const plus=all(root).find(n=>n.getAttribute('aria-label')==='放大图形');const before=byClass('zoom-readout')[0].textContent;plus.click();assert.notEqual(byClass('zoom-readout')[0].textContent,before);
-assert.equal(all(root).filter(x=>['iframe','img','a'].includes(x.tagName)).length,0);
-console.log('PASS: initialization, 3 views, selection, mixed statuses, search, keyboard navigation, Escape, contract drilldown, contract state transitions, back navigation, zoom, no dynamic external resources. DOM harness only, not browser visual QA.');
+const data=JSON.parse(fs.readFileSync(path.join(base,'assets/demo.json'),'utf8'));
+// Exercise an ancestor context that really does own a drilldown target.
+const leafView=data.views.find(view=>view.id==='module-transaction-detail');leafView.elementIds.push('orders');leafView.contextElementIds.push('orders');
+const original=JSON.stringify(data);let parsedModel;
+const root=new Element('root'),json=new Element('script'),meta=new Element('script');json.textContent=JSON.stringify(data);meta.textContent=JSON.stringify({warnings:['demo warning'],sourceName:'demo.json'});
+const document={getElementById:id=>({'architecture-app':root,'architecture-data':json,'render-metadata':meta})[id],createElement:tag=>new Element(tag),createElementNS:(_,tag)=>new Element(tag),activeElement:null,hidden:false,listeners:{},addEventListener(type,fn){this.listeners[type]=fn;}};
+const media={matches:false,listeners:{},addEventListener(type,fn){this.listeners[type]=fn;}};const timers=new Map();let timerId=0;const frames=[];
+const win={innerWidth:1500,matchMedia:()=>media,listeners:{},addEventListener(type,fn){this.listeners[type]=fn;}};
+const context={document,window:win,ResizeObserver:class{observe(){}},requestAnimationFrame:fn=>frames.push(fn),setTimeout:fn=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),JSON:{parse:text=>{const value=JSON.parse(text);if(text===json.textContent)parsedModel=value;return value;},stringify:JSON.stringify},console};
+vm.runInNewContext(fs.readFileSync(path.join(base,'assets/viewer.js'),'utf8'),context);
+function flushFrames(){while(frames.length)frames.shift()();}function tick(){const first=timers.entries().next().value;if(first){timers.delete(first[0]);first[1]();}}
+const byClass=cls=>all(root).filter(x=>x.classList.contains(cls));const one=cls=>byClass(cls)[0];const nodes=()=>byClass('node');const node=id=>nodes().find(x=>x.getAttribute('data-node-id')===id);const nav=()=>byClass('nav-button');const panel=()=>one('detail-panel');const main=()=>one('main');const input=()=>all(root).find(x=>x.tagName==='input');const visible=()=>byClass('trace-visible');
+const openNav=id=>{nav().find(x=>x.textContent.includes(data.views.find(v=>v.id===id).name)).click();flushFrames();};
+flushFrames();assert.equal(nav().length,data.views.length);assert.equal(nodes().length,data.views[0].elementIds.length);assert.equal(timers.size,0);assert(nodes().every(n=>n.getAttribute('aria-pressed')==='false'));
+// Details stay accessible without triggering drilldown.
+one('inspect-node').click();assert(panel().textContent.includes('订单模块'));assert(!main().textContent.includes('返回上一层'));assert.equal(all(panel()).filter(item=>item.classList.contains('drill-detail')).length,1);
+const contract=all(panel()).find(n=>n.classList.contains('detail-link')&&n.textContent.includes('create-order'));assert(contract);contract.click();assert(panel().textContent.includes('输入 / INPUT'));assert(panel().textContent.includes('状态转移 / STATES'));one('back-button').click();
+// Restore the complete prior view through two levels.
+input().value='订单';input().listeners.input();all(root).find(n=>n.getAttribute('aria-label')==='放大图形').click();const savedZoom=one('zoom-readout').textContent;one('diagram-viewport').scrollLeft=31;one('diagram-viewport').scrollTop=77;
+node('orders').click();flushFrames();assert(node('order-transaction'));assert.equal(document.activeElement.tagName,'h2');assert(one('breadcrumbs').textContent.includes('整体架构'));assert(one('node-context').textContent.includes('外部上下文'));
+node('order-transaction').click();flushFrames();assert(node('txn-check'));assert(one('breadcrumbs').textContent.includes('订单内部'));one('breadcrumb-back').click();flushFrames();assert(node('order-transaction'));assert.equal(document.activeElement.getAttribute('data-node-id'),'order-transaction');one('breadcrumb-back').click();flushFrames();assert(node('orders'));assert.equal(input().value,'订单');assert.equal(one('zoom-readout').textContent,savedZoom);assert.equal(one('diagram-viewport').scrollTop,77);assert.equal(one('diagram-viewport').scrollLeft,31);assert.equal(document.activeElement.getAttribute('data-node-id'),'orders');assert.equal(node('orders').getAttribute('aria-pressed'),'true');
+// A context node never drills, and direct module browsing can reach root.
+openNav('module-transaction-detail');node('inventory').click();assert(node('txn-check'));assert(panel().textContent.includes('外部上下文'));node('orders').click();assert(node('txn-check'));assert(panel().textContent.includes('外部上下文'));assert.equal(all(panel()).filter(item=>item.classList.contains('drill-detail')).length,0);one('breadcrumb-back').click();flushFrames();assert(node('orders'));
+// Search, keyboard, and mixed design/progress remain independent.
+openNav('flow-view-submit');assert(node('validate').textContent.includes('已完成'));assert(node('reserve').textContent.includes('正在开发'));assert(node('commit').textContent.includes('未完成'));assert(node('reject').textContent.includes('进度未声明'));assert(node('notify').textContent.includes('提议'));node('notify').click();assert(panel().textContent.includes('步骤状态：提议'));assert(panel().textContent.includes('进度未声明'));
+input().value='no-match';input().listeners.input();assert.equal(byClass('is-dimmed').length,nodes().length);input().value='';input().listeners.input();nodes()[0].focus();nodes()[0].listeners.keydown({key:'ArrowDown',preventDefault(){}});assert.equal(document.activeElement,nodes()[1]);nodes()[1].listeners.keydown({key:'Escape'});assert(nodes().every(n=>n.getAttribute('aria-pressed')==='false'));
+// Static by default; step along one existing edge, then explicitly pick a branch.
+assert.equal(timers.size,0);one('trace-step').click();assert.equal(visible().length,1);assert(one('trace-status').textContent.includes('解析与鉴权 → 预留库存'));one('trace-step').click();assert.equal(one('trace-branch').hidden,false);assert(one('trace-status').textContent.includes('已暂停'));assert.equal(visible().length,1);const branch=one('trace-branch-select');branch.value='2';branch.listeners.change();one('trace-step').click();assert(one('trace-status').textContent.includes('回滚并返回不足项'));assert.equal(visible().length,1);one('trace-step').click();assert(one('trace-status').textContent.includes('终点'));
+// Play/pause is bounded and view change cancels the timer and all overlays.
+one('trace-reset').click();assert.equal(visible().length,0);one('trace-play').click();assert.equal(timers.size,1);assert(one('diagram').classList.contains('motion-playing'));one('trace-pause').click();assert.equal(timers.size,0);assert(!one('diagram').classList.contains('motion-playing'));one('trace-reset').click();one('trace-play').click();tick();assert.equal(timers.size,0);assert.equal(one('trace-branch').hidden,false);one('trace-branch-select').value='1';one('trace-branch-select').listeners.change();one('trace-play').click();for(let i=0;i<10;i++)tick();assert.equal(timers.size,0);assert(one('trace-status').textContent.includes('已展示过的关系'));assert.equal(visible().length,1);
+// Reduced motion, hidden pages, closed panel, and print always stop animation.
+one('trace-reset').click();media.matches=true;media.listeners.change();assert.equal(one('trace-play').disabled,true);one('trace-step').click();assert.equal(visible().length,1);assert(!one('diagram').classList.contains('motion-playing'));media.matches=false;media.listeners.change();one('trace-reset').click();one('trace-play').click();document.hidden=true;document.listeners.visibilitychange();assert.equal(timers.size,0);document.hidden=false;
+one('trace-reset').click();one('trace-play').click();win.listeners.beforeprint();assert.equal(timers.size,0);one('trace-reset').click();one('trace-play').click();one('trace-panel').listeners.toggle();assert.equal(timers.size,0);
+one('trace-reset').click();one('trace-play').click();openNav('overview');assert.equal(timers.size,0);assert.equal(visible().length,0);
+// Pending fit callbacks from an old view cannot overwrite current navigation.
+node('orders').click();node('order-transaction').click();one('breadcrumb-back').click();flushFrames();assert(node('order-transaction'));
+assert(parsedModel);assert.equal(JSON.stringify(parsedModel),original);assert.equal(json.textContent,original);assert.equal(JSON.stringify(data),original);assert.equal(all(root).filter(x=>['iframe','img','a'].includes(x.tagName)).length,0);
+console.log('PASS: independent progress, 5 views, two-level drilldown/back/context/focus/search/zoom/scroll restoration, details/contracts, keyboard, explicit branch selection, static step, bounded animation play/pause/reset/cycle, timer cleanup, reduced-motion/visibility/print/closed-panel handling. DOM logic only; no browser/layout/CSP claim.');

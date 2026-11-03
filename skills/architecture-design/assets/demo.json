@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0",
-  "revision": "demo-2026-11-03",
+  "revision": "demo-2026-11-03-progress-drilldown",
   "title": "示例 · 订单处理架构",
-  "summary": "公开合成示例，不描述真实项目，也不构成已实现或已验证的事实。图纸是唯一可编辑来源；此 HTML 仅为离线只读快照。",
+  "summary": "公开合成示例，不描述真实项目，也不构成已实现或已验证的事实。图纸是唯一可编辑来源；此 HTML 仅为离线只读快照。 开发进度均为合成声明，仅演示已完成、正在开发、未完成与未声明，不表示审批或验收。",
   "architecture": {
     "style": "模块化单体 + 事务事件投递",
     "rationale": "假设小团队先共享部署与事务边界；订单与库存职责分离，通过显式契约协作。只有通知跨出主事务，避免过早引入分布式协调。",
@@ -49,7 +49,15 @@
       ],
       "contractIds": [
         "create-order"
-      ]
+      ],
+      "progress": "completed",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
     },
     {
       "id": "orders",
@@ -70,7 +78,16 @@
       "rules": [
         "成功返回前，订单和事件必须共同提交",
         "不记录付款卡号或其他敏感支付数据"
-      ]
+      ],
+      "drilldownViewId": "module-orders-detail",
+      "progress": "in_progress",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
     },
     {
       "id": "inventory",
@@ -85,7 +102,15 @@
       ],
       "contractIds": [
         "reserve-stock"
-      ]
+      ],
+      "progress": "incomplete",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
     },
     {
       "id": "database",
@@ -118,6 +143,115 @@
       "description": "供应商、限流与重试协议尚待确认；仅保留所需边界。",
       "rules": [
         "不得假定支持精确一次投递"
+      ]
+    },
+    {
+      "id": "order-validate",
+      "name": "A1 · 提交校验",
+      "kind": "component",
+      "parentId": "orders",
+      "status": "planned",
+      "description": "校验业务输入与幂等请求的一致性，不执行持久化。",
+      "progress": "completed",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。",
+      "contractIds": [
+        "create-order"
+      ]
+    },
+    {
+      "id": "order-transaction",
+      "name": "A2 · 订单事务",
+      "kind": "component",
+      "parentId": "orders",
+      "status": "planned",
+      "description": "协调幂等检查、库存预留与订单事件的原子提交；可继续钻取。",
+      "progress": "in_progress",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。",
+      "drilldownViewId": "module-transaction-detail"
+    },
+    {
+      "id": "order-outbox",
+      "name": "A3 · 事件交接",
+      "kind": "component",
+      "parentId": "orders",
+      "status": "proposed",
+      "description": "事务成功后将已落盘事件交给投递器；仍是候选实现路径。",
+      "progress": "incomplete",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
+    },
+    {
+      "id": "txn-check",
+      "name": "A2.1 · 幂等检查",
+      "kind": "component",
+      "parentId": "order-transaction",
+      "status": "planned",
+      "description": "读取幂等键已有结果，拒绝同键不同载荷。",
+      "progress": "completed",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。",
+      "contractIds": [
+        "create-order"
+      ]
+    },
+    {
+      "id": "txn-stock",
+      "name": "A2.2 · 预留库存",
+      "kind": "component",
+      "parentId": "order-transaction",
+      "status": "planned",
+      "description": "在同一事务内调用库存契约，库存不足时回滚。",
+      "progress": "in_progress",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。",
+      "contractIds": [
+        "reserve-stock"
+      ]
+    },
+    {
+      "id": "txn-persist",
+      "name": "A2.3 · 提交记录",
+      "kind": "component",
+      "parentId": "order-transaction",
+      "status": "planned",
+      "description": "原子提交订单及事件记录，成功后返回订单编号。",
+      "progress": "incomplete",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。",
+      "contractIds": [
+        "create-order"
       ]
     }
   ],
@@ -166,7 +300,8 @@
       "to": "events",
       "label": "轮询待发送事件",
       "kind": "read",
-      "status": "proposed"
+      "status": "proposed",
+      "semantics": "async"
     },
     {
       "id": "r-events-notify",
@@ -174,7 +309,71 @@
       "to": "notifications",
       "label": "幂等发送 / 重试",
       "kind": "message",
-      "status": "unknown"
+      "status": "unknown",
+      "semantics": "async"
+    },
+    {
+      "id": "r-detail-validate",
+      "from": "order-validate",
+      "to": "order-transaction",
+      "label": "输入合法后开始事务",
+      "kind": "call",
+      "status": "planned",
+      "semantics": "main"
+    },
+    {
+      "id": "r-detail-outbox",
+      "from": "order-transaction",
+      "to": "order-outbox",
+      "label": "提交成功后交接",
+      "kind": "message",
+      "status": "proposed",
+      "semantics": "async"
+    },
+    {
+      "id": "r-detail-access",
+      "from": "access",
+      "to": "order-validate",
+      "label": "进入订单边界",
+      "kind": "call",
+      "status": "planned",
+      "semantics": "main"
+    },
+    {
+      "id": "r-txn-check-stock",
+      "from": "txn-check",
+      "to": "txn-stock",
+      "label": "新提交预留库存",
+      "kind": "call",
+      "status": "planned",
+      "semantics": "main"
+    },
+    {
+      "id": "r-txn-stock-persist",
+      "from": "txn-stock",
+      "to": "txn-persist",
+      "label": "预留成功再提交",
+      "kind": "call",
+      "status": "planned",
+      "semantics": "main"
+    },
+    {
+      "id": "r-txn-inventory",
+      "from": "txn-stock",
+      "to": "inventory",
+      "label": "库存契约",
+      "kind": "call",
+      "status": "planned",
+      "semantics": "main"
+    },
+    {
+      "id": "r-txn-database",
+      "from": "txn-persist",
+      "to": "database",
+      "label": "原子持久化",
+      "kind": "write",
+      "status": "planned",
+      "semantics": "main"
     }
   ],
   "contracts": [
@@ -284,7 +483,15 @@
             "retryable": false
           }
         }
-      ]
+      ],
+      "progress": "in_progress",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
     },
     {
       "id": "reserve-stock",
@@ -340,7 +547,15 @@
           "description": "输入格式校验通过后进入订单边界。",
           "contractIds": [
             "create-order"
-          ]
+          ],
+          "progress": "completed",
+          "progressEvidence": [
+            {
+              "path": "skills/architecture-design/assets/demo.json",
+              "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+            }
+          ],
+          "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
         },
         {
           "id": "reserve",
@@ -348,13 +563,29 @@
           "elementId": "inventory",
           "contractIds": [
             "reserve-stock"
-          ]
+          ],
+          "progress": "in_progress",
+          "progressEvidence": [
+            {
+              "path": "skills/architecture-design/assets/demo.json",
+              "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+            }
+          ],
+          "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
         },
         {
           "id": "commit",
           "name": "提交订单与事件",
           "elementId": "orders",
-          "description": "同一事务原子提交。"
+          "description": "同一事务原子提交。",
+          "progress": "incomplete",
+          "progressEvidence": [
+            {
+              "path": "skills/architecture-design/assets/demo.json",
+              "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+            }
+          ],
+          "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
         },
         {
           "id": "reject",
@@ -384,35 +615,40 @@
           "from": "validate",
           "to": "reserve",
           "label": "格式合法",
-          "outcome": "normal"
+          "outcome": "normal",
+          "semantics": "main"
         },
         {
           "from": "reserve",
           "to": "commit",
           "label": "库存充足",
           "condition": "所有 SKU 可原子预留",
-          "outcome": "normal"
+          "outcome": "normal",
+          "semantics": "branch"
         },
         {
           "from": "reserve",
           "to": "reject",
           "label": "库存不足",
           "condition": "任一 SKU 不足",
-          "outcome": "failure"
+          "outcome": "failure",
+          "semantics": "error"
         },
         {
           "from": "commit",
           "to": "notify",
           "label": "事务已提交",
           "outcome": "normal",
-          "status": "proposed"
+          "status": "proposed",
+          "semantics": "async"
         },
         {
           "from": "notify",
           "to": "retry",
           "label": "通知失败",
           "outcome": "recovery",
-          "status": "proposed"
+          "status": "proposed",
+          "semantics": "error"
         },
         {
           "from": "retry",
@@ -420,9 +656,18 @@
           "label": "预算内重试",
           "condition": "未超过重试阈值",
           "outcome": "recovery",
-          "status": "proposed"
+          "status": "proposed",
+          "semantics": "return"
         }
-      ]
+      ],
+      "progress": "in_progress",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
     }
   ],
   "views": [
@@ -472,6 +717,51 @@
       "kind": "flow",
       "flowId": "flow-submit",
       "description": "包含关键失败与恢复路径；点击步骤查看对应模块和接口。"
+    },
+    {
+      "id": "module-orders-detail",
+      "name": "订单内部 · A1 → A2 → A3",
+      "kind": "module",
+      "focusElementId": "orders",
+      "description": "进入订单模块后查看三个内部责任边界；访问接口是外部上下文。点击 A2 可再展开一层。",
+      "elementIds": [
+        "access",
+        "order-validate",
+        "order-transaction",
+        "order-outbox"
+      ],
+      "contextElementIds": [
+        "access"
+      ],
+      "relationshipIds": [
+        "r-detail-access",
+        "r-detail-validate",
+        "r-detail-outbox"
+      ]
+    },
+    {
+      "id": "module-transaction-detail",
+      "name": "订单事务内部 · A2.1 → A2.2 → A2.3",
+      "kind": "module",
+      "focusElementId": "order-transaction",
+      "description": "第二层细化展示事务内部步骤；库存与数据库仅作外部上下文，不能从此处继续钻取。",
+      "elementIds": [
+        "txn-check",
+        "txn-stock",
+        "txn-persist",
+        "inventory",
+        "database"
+      ],
+      "contextElementIds": [
+        "inventory",
+        "database"
+      ],
+      "relationshipIds": [
+        "r-txn-check-stock",
+        "r-txn-stock-persist",
+        "r-txn-inventory",
+        "r-txn-database"
+      ]
     }
   ],
   "changes": [
@@ -507,7 +797,15 @@
           "src/inventory/repository",
           "tests/order_submission"
         ]
-      }
+      },
+      "progress": "in_progress",
+      "progressEvidence": [
+        {
+          "path": "skills/architecture-design/assets/demo.json",
+          "note": "公开合成示例中的开发进度声明，不是真实项目实施、测试或验收证据。"
+        }
+      ],
+      "progressNote": "仅示例开发进度；与设计状态、审批和验收验证独立。"
     }
   ]
 }

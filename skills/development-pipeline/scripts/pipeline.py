@@ -22,7 +22,7 @@ from urllib.parse import quote, urlsplit
 
 
 WORKSPACE_NAME = ".agent-workspace"
-WORKSPACE_RESERVED_DIRS = frozenset({"memory", "design", "plans", "work", WORKSPACE_NAME})
+WORKSPACE_RESERVED_DIRS = frozenset({"memory", "design", "architecture", "plans", "work", WORKSPACE_NAME})
 
 
 class PipelineError(ValueError):

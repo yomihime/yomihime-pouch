@@ -171,6 +171,7 @@ class ProjectIndexTests(unittest.TestCase):
             "init-20261103/init/staging/template/pipeline/events.jsonl",
             "memory/pipeline/events.jsonl",
             "design/pipeline/events.jsonl",
+            "architecture/pipeline/events.jsonl",
             "plans/pipeline/events.jsonl",
             "work/pipeline/events.jsonl",
             "current/scratch/pipeline/events.jsonl",
@@ -189,9 +190,34 @@ class ProjectIndexTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), journal)
             self.assertFalse((path.parent / ".pipeline.lock").exists(), relative)
 
+    def test_persistent_architecture_is_preserved_without_hiding_similar_work_ids(self):
+        run = self.init("architecture-refresh", "Refresh architecture")
+        architecture = self.work / "architecture"
+        materials = {
+            "architecture.json": '{"schemaVersion":"1.0","revision":"current"}\n',
+            "index.html": "User-owned architecture viewer",
+            "modules/orders.json": '{"id":"orders"}\n',
+            "pipeline/events.jsonl": "not a pipeline journal; reserved design material\n",
+        }
+        for relative, content in materials.items():
+            path = architecture / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        before = {path.relative_to(architecture): path.read_bytes()
+                  for path in architecture.rglob("*") if path.is_file()}
+        journal = (run / "events.jsonl").read_bytes()
+        pipeline.build_index(self.work)
+        self.assertIn("architecture", pipeline.WORKSPACE_RESERVED_DIRS)
+        self.assertEqual(set(self.entries()), {"architecture-refresh/pipeline"})
+        self.assertEqual((run / "events.jsonl").read_bytes(), journal)
+        after = {path.relative_to(architecture): path.read_bytes()
+                 for path in architecture.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+        self.assertFalse((architecture / "pipeline" / ".pipeline.lock").exists())
+
     def test_explicit_noncanonical_workspace_run_keeps_its_own_views(self):
         canonical = self.init("canonical")
-        for relative in ("custom-run", "other/deep/pipeline", "memory/pipeline"):
+        for relative in ("custom-run", "other/deep/pipeline", "memory/pipeline", "architecture/pipeline"):
             with self.subTest(path=relative):
                 run = self.work / relative
                 pipeline.mutate(run, "init", title=relative, demo=True)

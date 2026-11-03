@@ -5,7 +5,7 @@ description: >-
   初始化 .agent-workspace，并一次性整理旧项目中的 Agent 中间材料和规范。
   用于初始化项目工作环境、检查技能更新或整理旧工作目录，不实施产品功能或修改项目代码。
 metadata:
-  version: "2026-11-03T15:05:00Z"
+  version: "2026-11-03T16:48:16Z"
 ---
 
 # yomihime init
@@ -64,6 +64,7 @@ metadata:
 ```text
 .agent-workspace/
 ├── memory/                  # current.md、references/、evidence/、archive/
+├── architecture/            # 按需稳定架构源，跨任务复用；已有有效源原位保留
 ├── design/                  # ui-guide.md、writing-guide.md、resources.md，按需
 ├── plans/                   # 独立计划文档，按需
 ├── work/                    # 无专用归属的临时材料，按需
@@ -78,15 +79,16 @@ metadata:
     └── init/                # 本次盘点、迁移映射、技能来源与更新回执，按需
 ```
 
-`<work-id>` 不得占用 `memory`、`design`、`plans`、`work` 或已有工具保留名称。init 可使用 `init-<UTC时间>` 加必要防冲突后缀，不复用他人正在写入的目录。
+`<work-id>` 不得占用 `memory`、`architecture`、`design`、`plans`、`work` 或已有工具保留名称。init 可使用 `init-<UTC时间>` 加必要防冲突后缀，不复用他人正在写入的目录。
 
-- `.local-dev/`、`.local_dev/`、`.project-memory/`、`.agent-work/` 等只在本次迁移审计时识别。没有永久兼容读写、旧路径 fallback、别名、软链接或双写；其他技能运行时只使用新结构。
+- `.local-dev/`、`.local_dev/`、`.project-memory/`、`.agent-work/` 等只在本次迁移审计时识别，不设目录搜索回退、别名、软链接或双写；新建材料使用新结构。有效入口已明确指向既有架构权威源时，继续原位使用该源不属于旧目录 fallback；未获迁移授权前保留其实际入口与使用，不旁建默认源或仅因路径旧而阻断读取。
 - 旧项目不套固定模板。结合实际入口、用途、引用和占用逐项判断，记录「原路径 → 新路径、依据、校验、未决项」。只整理确认为 Agent 工作材料、计划、记忆或规范的文件，不按目录名猜测可移动或可删除。
 - 整理不等于丢弃。已有内容、用户改动、旧记忆历史与证据须保留；目标冲突、未知归属、正在使用或依赖源码路径的文件先保留并报告。需要修改项目代码才能迁移的项留待另一个明确授权的任务，不能在 init 内改代码。
+- 架构源先按有效入口核对路径、范围、修订和 writer。采用 architecture-design 且没有有效源时，才按需使用 `.agent-workspace/architecture/architecture.json`；已有有效源原位复用，不因新任务或目录模板复制、转换或搬迁。迁移或覆盖源、调整权威入口须明确授权并核验恢复与引用。JSON 确认为同范围唯一详细机器源后，`memory/references/architecture.md` 保留有证据的现状说明和源引用，不复制契约；已有权威 Markdown 未经获准转换不能自动降级。任务结果只保留建议、差异和报告，活跃源与必要图纸依据不属于普通临时清理。
 - 仓库根 `AGENTS.md` 保留为运行时入口，不搬进隐藏目录。经授权仅更新与迁移有关的简短链接及读取规则，保留其他指导。源码 checkout、worktree 与真实业务数据不放进此工作区。
 - 默认本地私有。写入前检查 tracked/staged/ignore 状态，按授权精确维护本地 exclude，不修改共享 `.gitignore`、全局设置或用户暂存区。已跟踪的私有材料保留原状并报告，不靠 ignore 假装解决泄露风险。
 
-需要新记忆时交 `project-memory`，需要设计或文案指南时交相应技能；只初始化与本次工作有关的最小内容，未知标明未知，不为 init 强制启动完整开发流水线、全仓测绘或重建所有规范。
+需要新记忆时交 `project-memory`，需要新架构源时可交 `architecture-design`，需要设计或文案指南时交相应技能；缺少对应技能时保留既有资料并报告，不能凭 init 编造已转换或已验证的结果。只初始化与本次工作有关的最小内容，未知标明未知，不为 init 强制启动完整开发流水线、全仓测绘或重建所有规范。
 
 ### 5. 验证与交付
 

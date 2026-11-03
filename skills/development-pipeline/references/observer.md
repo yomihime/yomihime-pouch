@@ -4,7 +4,7 @@
 
 ## 按项目和运行隔离
 
-每个项目使用自己的 .agent-workspace/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录；work-id 避开 memory、design、plans、work 及已有受管文件。项目固定入口为 .agent-workspace/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
+每个项目使用自己的 .agent-workspace/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录；work-id 避开 memory、design、architecture、plans、work 及已有受管文件。项目固定入口为 .agent-workspace/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
 
 ```text
 .agent-workspace/

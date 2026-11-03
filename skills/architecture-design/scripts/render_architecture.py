@@ -18,7 +18,7 @@ from pathlib import Path, PurePosixPath
 import re
 import sys
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 MAX_SOURCE_BYTES = 5 * 1024 * 1024
 MAX_ERRORS = 100
 MAX_SAFE_INTEGER = 9007199254740991
@@ -200,17 +200,22 @@ def validate_data(data):
     def check_evidence(item, location):
         if item.get("status") == "current" and not item.get("evidence"):
             error(location, "current claims require evidence; use unknown when evidence is missing")
-        for eindex, evidence in enumerate(item.get("evidence", [])):
-            path = evidence["path"]
-            parts = PurePosixPath(path).parts
-            if (not path.strip() or path in (".", "..") or "\\" in path or path.startswith("/")
-                    or any(part == ".." for part in parts) or ":" in path
-                    or any(ord(char) < 32 for char in path)):
-                error(f"{location}.evidence[{eindex}].path", "must be a repository-relative POSIX path without traversal, control characters, or URL schemes")
-            if "lines" in evidence and "-" in evidence["lines"]:
-                start, end = map(int, evidence["lines"].split("-"))
-                if end < start:
-                    error(f"{location}.evidence[{eindex}].lines", "range must be ascending")
+        if item.get("progress", "unknown") != "unknown" and not item.get("progressEvidence"):
+            error(location, "declared progress requires progressEvidence; omit progress or use unknown when its source is missing")
+        # Progress is a sourced declaration, not acceptance or verification.
+        # It never changes design status and never inherits from a parent flow.
+        for evidence_key in ("evidence", "progressEvidence"):
+            for eindex, evidence in enumerate(item.get(evidence_key, [])):
+                path = evidence["path"]
+                parts = PurePosixPath(path).parts
+                if (not path.strip() or path in (".", "..") or "\\" in path or path.startswith("/")
+                        or any(part == ".." for part in parts) or ":" in path
+                        or any(ord(char) < 32 for char in path)):
+                    error(f"{location}.{evidence_key}[{eindex}].path", "must be a repository-relative POSIX path without traversal, control characters, or URL schemes")
+                if "lines" in evidence and "-" in evidence["lines"]:
+                    start, end = map(int, evidence["lines"].split("-"))
+                    if end < start:
+                        error(f"{location}.{evidence_key}[{eindex}].lines", "range must be ascending")
 
     def check_flow_evidence(item, flow, location):
         # Match viewer inheritance without mutating the authoritative source.
@@ -240,6 +245,11 @@ def validate_data(data):
             reference(item["parentId"], "elements", identifier + ".parentId")
         for value in item.get("contractIds", []):
             reference(value, "contracts", identifier + ".contractIds")
+        if "drilldownViewId" in item:
+            reference(item["drilldownViewId"], "views", identifier + ".drilldownViewId")
+            target = tables["views"].get(item["drilldownViewId"])
+            if target and (target["kind"] != "module" or target.get("focusElementId") != identifier):
+                error(identifier + ".drilldownViewId", "must point to a module view whose focusElementId is this element")
         visited = set()
         current = identifier
         while current in tables["elements"]:
@@ -287,7 +297,45 @@ def validate_data(data):
         if not any(s.get("outcome") in ("failure", "recovery") for s in flow["steps"]) and not any(t.get("outcome") in ("failure", "recovery") for t in flow["transitions"]):
             warnings.append(f"{identifier}: no failure or recovery path modeled; confirm whether applicable")
 
+    def is_descendant(identifier, ancestor):
+        visited = set()
+        current = tables["elements"].get(identifier, {}).get("parentId")
+        while current in tables["elements"] and current not in visited:
+            if current == ancestor:
+                return True
+            visited.add(current)
+            current = tables["elements"][current].get("parentId")
+        return False
+
+    focused_views = {}
     for identifier, view in tables["views"].items():
+        focus = view.get("focusElementId")
+        context = set(view.get("contextElementIds", []))
+        if focus is not None:
+            if view["kind"] != "module":
+                error(identifier, "focusElementId is only valid on module views")
+            reference(focus, "elements", identifier + ".focusElementId")
+            if focus in focused_views:
+                error(identifier, f"duplicate focused module view for {focus!r}")
+            focused_views[focus] = identifier
+            owner = tables["elements"].get(focus)
+            if owner and owner.get("drilldownViewId") != identifier:
+                error(identifier, "focus element must link back through drilldownViewId")
+            internal = set(view.get("elementIds", [])) - context
+            if not internal:
+                error(identifier, "focused module view requires at least one internal descendant")
+            for element_id in internal:
+                if element_id in tables["elements"] and not is_descendant(element_id, focus):
+                    error(identifier, f"internal element {element_id!r} is not a strict descendant of focusElementId")
+        if "contextElementIds" in view:
+            if view["kind"] != "module" or focus is None:
+                error(identifier, "contextElementIds requires a focused module view")
+            if not context.issubset(set(view.get("elementIds", []))):
+                error(identifier, "contextElementIds must be a subset of elementIds")
+            for element_id in context:
+                reference(element_id, "elements", identifier + ".contextElementIds")
+                if focus is not None and is_descendant(element_id, focus):
+                    error(identifier, f"context element {element_id!r} belongs to the focus subtree; list it as internal")
         if view["kind"] == "flow":
             if "flowId" not in view:
                 error(identifier, "flow view requires flowId")
@@ -308,6 +356,28 @@ def validate_data(data):
                 rel = tables["relationships"].get(rel_id)
                 if rel and (rel["from"] not in scope or rel["to"] not in scope):
                     error(identifier, f"relationship {rel_id!r} has endpoints outside this view's elementIds")
+    # Check the actual navigation graph as well as the ownership hierarchy.
+    # Context nodes intentionally have no drilldown edge in this graph.
+    adjacency = {identifier: set() for identifier in tables["views"]}
+    incoming = {identifier: 0 for identifier in tables["views"]}
+    for identifier, view in tables["views"].items():
+        for element_id in set(view.get("elementIds", [])) - set(view.get("contextElementIds", [])):
+            target = tables["elements"].get(element_id, {}).get("drilldownViewId")
+            if target in adjacency and target not in adjacency[identifier]:
+                adjacency[identifier].add(target)
+                incoming[target] += 1
+    ready = [identifier for identifier, count in incoming.items() if count == 0]
+    visited_count = 0
+    while ready:
+        identifier = ready.pop()
+        visited_count += 1
+        for target in adjacency[identifier]:
+            incoming[target] -= 1
+            if incoming[target] == 0:
+                ready.append(target)
+    if visited_count != len(adjacency):
+        error("$.views", "drilldown navigation contains a cycle")
+
     if not any(view["kind"] == "overview" for view in data["views"]):
         error("$.views", "at least one overview view is required")
 

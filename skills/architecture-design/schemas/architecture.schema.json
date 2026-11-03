@@ -221,6 +221,22 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        },
+        "drilldownViewId": {
+          "$ref": "#/$defs/id"
         }
       },
       "required": [
@@ -274,6 +290,22 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        },
+        "semantics": {
+          "$ref": "#/$defs/semantics"
         }
       },
       "required": [
@@ -457,6 +489,19 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
         }
       },
       "required": [
@@ -514,6 +559,19 @@
             "$ref": "#/$defs/evidence"
           },
           "maxItems": 2000
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
         }
       },
       "required": [
@@ -553,6 +611,22 @@
             "$ref": "#/$defs/evidence"
           },
           "maxItems": 2000
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        },
+        "semantics": {
+          "$ref": "#/$defs/semantics"
         }
       },
       "required": [
@@ -602,6 +676,19 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
         }
       },
       "required": [
@@ -655,6 +742,17 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "focusElementId": {
+          "$ref": "#/$defs/id"
+        },
+        "contextElementIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
         }
       },
       "required": [
@@ -734,6 +832,19 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
         }
       },
       "required": [
@@ -743,6 +854,23 @@
         "description"
       ],
       "additionalProperties": false
+    },
+    "progress": {
+      "enum": [
+        "completed",
+        "in_progress",
+        "incomplete",
+        "unknown"
+      ]
+    },
+    "semantics": {
+      "enum": [
+        "main",
+        "branch",
+        "async",
+        "return",
+        "error"
+      ]
     }
   }
 }

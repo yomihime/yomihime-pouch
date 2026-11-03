@@ -1,6 +1,6 @@
 # Architecture Design · 架构设计
 
-先根据约束选择合适的架构，再用一份标准化源表达总体、模块和当前实施流程。新项目先搭最小骨架再逐步细化；已有项目先核实现状，只展开这轮要改的部分。避免为了画图而全仓测绘或过度设计。
+先根据约束选择合适的架构，再用一份标准化源表达总体、模块和当前实施流程。新项目先搭最小骨架再逐步细化；已有项目先核实现状，只展开这轮要改的部分。避免为了画图而全仓测绘或过度设计。它是 project-memory 的架构补充（plus）：集中保存长期图纸并逐步细化，不替代完整当前状态，也可独立安装。
 
 ## 使用
 
@@ -39,7 +39,9 @@ python3 skills/architecture-design/scripts/render_architecture.py \
 
 浏览器直接打开新生成的 `architecture-preview/architecture-demo.html`。脚本不覆盖、不监听、不自动同步，也不写回源文件或项目记忆。写入失败可能留下本次新建的部分文件，不会自动删除；先检查文件，再选择新输出名称重试。单独安装时替换命令中的技能路径。
 
-页面展示三个视角如何复用同一组模块和契约，可选择节点与关系，查看职责、证据、输入/输出、错误、状态和样例，支持搜索、缩放及失败/恢复路径。它是带源修订和哈希的离线只读快照，不是代码运行或验收通过的证明。
+页面展示总体、模块、实施流程如何复用同一组对象。节点按实际父子结构逐层下钻到模块内部，上下文节点只看详情；可查看职责、证据、输入/输出、错误、状态和样例，支持搜索、缩放及失败/恢复路径。
+
+研发进度单独展示“已完成 / 正在开发 / 未完成 / 未声明”，有来源才记录，不混同 current/planned/proposed、方案批准或验收通过。主路径、分支、异步、返回、错误的连线语义及动效用于结构示意，不表示实时进程或自动同步。路径演示默认静态，支持播放/暂停/单步，遇分支先选择；尊重系统减弱动态效果设置。逐层导航、返回与演示操作见 [页面使用说明](references/examples.md#在页面里逐层查看与演示路径)。它是带源修订和哈希的离线只读快照，不是代码运行或验收通过的证明。
 
 ## 文件与唯一来源
 
@@ -59,7 +61,9 @@ architecture-design/
   tests/                          结构、语义与渲染回归
 ```
 
-项目里默认把新图纸放 `.agent-workspace/<work-id>/architecture.json`，HTML 是派生快照。已有规范源则原位复用，不再维护平行 JSON 或手写图；`memory/current.md` 仍是唯一完整当前状态，直接说明事实并引用详细源路径/修订。目录按需创建，含项目数据的源和网页默认本地私有。
+项目中新的长期规范源默认放 `.agent-workspace/architecture/architecture.json`，按需创建，不随任务目录清理。已有有效唯一源原位复用，不自动迁移、覆盖或创建平行 JSON；既有 Markdown 权威须先确认获准转换范围，不能旁建 JSON 后自动取代它；实际路径/范围/修订通过既有 AGENTS 或项目记忆入口跨任务发现。`memory/current.md` 仍是唯一完整当前状态，直接说明关键事实并引用详细源。
+
+每个范围一名 writer；计划与已确认现状在同源中分别标注，完成任务不等于计划已实现。长期源、必要证据和有效入口受清理保护，即使旧源仍在任务目录也不得因任务结束删除。HTML 仅为可重建的只读快照，可按需放 `.agent-workspace/architecture/views/` 或任务产物目录；删除、迁移和共享仍需相应授权。含项目数据的源和网页默认本地私有。
 
 - [选择架构与工作方式](references/workflow.md)
 - [机器源、状态、证据和渲染契约](references/source-contract.md)
@@ -78,6 +82,12 @@ node skills/architecture-design/tests/test_viewer_dom.cjs
 ```
 
 后者使用模拟 DOM，不能代替真实浏览器排版、截图或 CSP 验证。原生 Windows 运行和真实浏览器视觉验收仍需在目标环境核验。
+
+## 参考与致谢
+
+交互思路参考 [tt-a1i/archify](https://github.com/tt-a1i/archify)，包括从总体查看模块细节的图形交互。本技能、规范、渲染器及查看器独立撰写，未复制 Archify 的代码或素材，也不代表获得其官方背书。
+
+2026-11-03 核对时，Archify 的主许可为 [Apache-2.0](https://github.com/tt-a1i/archify/blob/main/LICENSE)；其 [NOTICE](https://github.com/tt-a1i/archify/blob/main/NOTICE) 说明历史许可与例外，并保留 [历史 MIT 许可](https://github.com/tt-a1i/archify/blob/main/LICENSE-MIT)，第三方组件另见 [第三方声明](https://github.com/tt-a1i/archify/blob/main/THIRD_PARTY_NOTICES.md)。这里仅提供参考链接，不把上游或第三方许可扩展到本项目；后续若引入其代码/素材，需另行核对并遵守对应条款。
 
 ## 许可
 

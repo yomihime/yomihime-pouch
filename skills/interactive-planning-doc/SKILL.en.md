@@ -8,7 +8,7 @@ description: >-
   cleanup, version/release preparation, or when the user says not to change code
   and wants decisions written into a reusable plan document.
 metadata:
-  version: "2026-11-03T16:26:33Z"
+  version: "2026-11-03T16:47:36Z"
 ---
 
 # Interactive Planning Doc
@@ -42,7 +42,7 @@ screenshots in that task's `scratch/` directory, for example
 and existing task entries first, then reuse one main plan. Do not create duplicate
 authorities, default duplicate rules, or empty files just to fill a template.
 Choose a recognizable work ID that does not collide with existing work. It must not use
-`memory`, `design`, `plans`, `work`, or other names reserved by existing tools. Deliver
+`memory`, `design`, `architecture`, `plans`, `work`, or other names reserved by existing tools. Deliver
 formal planning documents, product docs, or publication artifacts to the user's
 specified destination; do not force those deliverables into a private workspace.
 
@@ -235,6 +235,18 @@ question they answer. A design is not proof of implementation or successful
 validation. If the skill is unavailable, state the gap and plan within the
 affected code and existing documentation; do not install it automatically or
 force local changes through a full architecture process.
+
+For detailed diagrams that must survive the task, reuse the existing valid source
+in place. Only when no source exists and one is needed, create the long-lived
+canonical source on demand under `.agent-workspace/architecture/`, not in task
+scratch. Register its path, revision, current/planned status, and owner through
+an existing stable entry in `AGENTS.md` or `memory/current.md`. The main plan
+references that same source; do not create a duplicate project-memory diagram
+source. Keep the recovery-critical overview directly in current.md. At handoff,
+verify that the entry is readable and references match the source revision, then
+identify the next writer. Preserve the source and still-referenced evidence/views
+when cleaning task materials. Finishing the plan does not authorize deleting them
+or migrating or overwriting existing materials.
 
 ### 9. Add Self-Review Constraints
 

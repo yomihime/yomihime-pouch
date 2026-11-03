@@ -8,7 +8,7 @@ description: >-
   acceptance cleanup, version/release preparation, or when the user asks to
   avoid code changes and capture decisions in a reusable execution plan.
 metadata:
-  version: "2026-11-03T16:26:33Z"
+  version: "2026-11-03T16:47:36Z"
 ---
 
 # Interactive Planning Doc
@@ -26,7 +26,7 @@ metadata:
 
 ## 项目本地计划与中间产物
 
-项目本地规范与中间产物统一放在 `.agent-workspace/`。协作执行计划使用 `.agent-workspace/<work-id>/plan.md`，草稿、候选比较和临时截图使用同一任务下的 `scratch/`；例如 `.agent-workspace/feature-search/plan.md`。先读适用的 `AGENTS.md` 和已有任务入口，复用本次工作的主计划，不创建并行权威或默认重复规则。`<work-id>` 应能辨认任务且不与既有工作冲突，不得占用 `memory`、`design`、`plans`、`work` 或已有工具保留名称；不因目录模板而一次性创建空文件。用户明确指定的正式规划文档、产品文档或发布产物按其目的地交付，不强制改成本地私有文件。
+项目本地规范与中间产物统一放在 `.agent-workspace/`。协作执行计划使用 `.agent-workspace/<work-id>/plan.md`，草稿、候选比较和临时截图使用同一任务下的 `scratch/`；例如 `.agent-workspace/feature-search/plan.md`。先读适用的 `AGENTS.md` 和已有任务入口，复用本次工作的主计划，不创建并行权威或默认重复规则。`<work-id>` 应能辨认任务且不与既有工作冲突，不得占用 `memory`、`design`、`architecture`、`plans`、`work` 或已有工具保留名称；不因目录模板而一次性创建空文件。用户明确指定的正式规划文档、产品文档或发布产物按其目的地交付，不强制改成本地私有文件。
 
 旧目录和旧入口由 `yomihime-init` 在项目初始化时盘点并安全整理，不建立长期兼容路径或回退查找。保留既有计划、指南和人工编辑，不自动覆盖；遇到冲突先报告并确认，验证目标内容与引用后再按授权收尾。本技能不因发现旧文件而自行迁移，也不在整理未完成时另建重复计划；不依赖迁移的讨论和只读规划可以继续，明确未解决的路径问题。
 
@@ -161,6 +161,8 @@ metadata:
 该类应用可采用 UI 触发工作、worker 执行耗时任务、core 承担业务逻辑、storage helper 管理路径、renderer 生成派生产物的职责划分；是否适用须由平台约束、现有架构和任务证据决定，不强制新增这些层或模块。
 
 新系统、重大边界变化或架构审查需要专门设计时，若运行时可用则加载 `architecture-design`，提供目标/非目标、约束、关键质量属性、现状证据和待决问题。将已接受决定、必要契约、风险和验证条件归入同一个主计划；需要详细架构产物时引用已有权威来源及其基准/状态/范围，不另建平行计划或重复图源。视图按问题选取，架构方案不等于实现或验证已通过；缺少该技能时说明缺口，依据受影响代码和已有文档做有界规划，不自行安装，也不让局部修改承担完整架构流程。
+
+需跨任务维护的详细图纸先原位复用现有有效源；只有无源且确有需要时，默认在 `.agent-workspace/architecture/` 按需建立长期唯一源，不存入任务 scratch。通过已有 `AGENTS.md` 或 `memory/current.md` 的稳定入口登记路径、修订、现状/目标状态与 owner，主计划引用该源，不另造 project-memory 图源；current.md 仍直接保留恢复必需概览。交接时核对入口可读、引用与源修订一致并明确后续 writer，清理任务材料时保留图源及仍被引用的依据/视图；不因计划结束删除，也不擅自迁移或覆盖已有材料。
 
 ### 9. 加入自审查约束
 

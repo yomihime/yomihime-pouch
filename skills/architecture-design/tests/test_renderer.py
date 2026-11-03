@@ -228,6 +228,140 @@ class ValidationTests(unittest.TestCase):
             renderer.load_json(("[" * 65 + "0" + "]" * 65).encode())
 
 
+class ProgressAndDrilldownTests(unittest.TestCase):
+    def assert_invalid(self, data, phrase):
+        with self.assertRaisesRegex(renderer.ArchitectureError, phrase):
+            renderer.validate_data(data)
+
+    def test_existing_sources_without_new_fields_remain_valid(self):
+        data = fixture()
+        for collection in ("elements", "relationships", "contracts", "flows", "changes"):
+            for item in data.get(collection, []):
+                for key in ("progress", "progressEvidence", "progressNote", "drilldownViewId", "semantics"):
+                    item.pop(key, None)
+        for flow in data["flows"]:
+            for item in flow["steps"] + flow["transitions"]:
+                for key in ("progress", "progressEvidence", "progressNote", "semantics"):
+                    item.pop(key, None)
+        for view in data["views"]:
+            view.pop("focusElementId", None)
+            view.pop("contextElementIds", None)
+        self.assertEqual(renderer.validate_data(data), [])
+
+    def test_progress_has_its_own_source_and_is_not_acceptance(self):
+        data = fixture()
+        change = data["changes"][0]
+        change.update(progress="completed", status="planned", decision="draft", verification="unverified")
+        renderer.validate_data(data)
+        self.assertEqual((change["status"], change["decision"], change["verification"]), ("planned", "draft", "unverified"))
+        change.pop("progressEvidence")
+        self.assert_invalid(data, "declared progress requires progressEvidence")
+        change["progress"] = "unknown"
+        renderer.validate_data(data)
+        change["progress"] = "done"
+        self.assert_invalid(data, "must be one of")
+
+    def test_progress_evidence_is_separate_from_current_evidence(self):
+        data = fixture()
+        data["elements"][1]["status"] = "current"
+        self.assert_invalid(data, "current claims require evidence")
+        data = fixture()
+        data["elements"][1]["progressEvidence"] = [{"path": "../private"}]
+        self.assert_invalid(data, "repository-relative POSIX")
+
+    def test_progress_missing_on_children_is_not_inherited(self):
+        data = fixture()
+        flow = data["flows"][0]
+        flow["progress"] = "completed"
+        for item in flow["steps"] + flow["transitions"]:
+            for key in ("progress", "progressEvidence", "progressNote"):
+                item.pop(key, None)
+        before = copy.deepcopy(data)
+        renderer.validate_data(data)
+        self.assertEqual(data, before)
+        self.assertTrue(all("progress" not in item for item in flow["steps"] + flow["transitions"]))
+        flow["steps"][0]["progress"] = "in_progress"
+        self.assert_invalid(data, "declared progress requires progressEvidence")
+
+    def test_progress_validates_every_supported_semantic_scope(self):
+        for collection in ("elements", "relationships", "contracts", "flows", "changes"):
+            data = fixture()
+            data[collection][0]["progress"] = "incomplete"
+            data[collection][0].pop("progressEvidence", None)
+            self.assert_invalid(data, "declared progress requires progressEvidence")
+        data = fixture()
+        data["flows"][0]["transitions"][0]["progress"] = "completed"
+        self.assert_invalid(data, "declared progress requires progressEvidence")
+
+    def test_two_drilldown_levels_are_explicit_and_valid(self):
+        data = fixture()
+        elements = {item["id"]: item for item in data["elements"]}
+        views = {item["id"]: item for item in data["views"]}
+        first = views[elements["orders"]["drilldownViewId"]]
+        second = views[elements["order-transaction"]["drilldownViewId"]]
+        self.assertEqual(first["focusElementId"], "orders")
+        self.assertIn("order-transaction", first["elementIds"])
+        self.assertEqual(second["focusElementId"], "order-transaction")
+        self.assertEqual(renderer.validate_data(data), [])
+
+    def test_drilldown_references_must_be_module_views_with_matching_owner(self):
+        for target in ("not-a-view", "overview", "module-transaction-detail"):
+            data = fixture()
+            next(item for item in data["elements"] if item["id"] == "orders")["drilldownViewId"] = target
+            self.assert_invalid(data, "Semantic validation failed")
+        data = fixture()
+        next(item for item in data["elements"] if item["id"] == "orders").pop("drilldownViewId")
+        self.assert_invalid(data, "link back")
+
+    def test_focus_owner_is_unique_and_view_scope_is_strict(self):
+        data = fixture()
+        duplicate = copy.deepcopy(data["views"][-1])
+        duplicate["id"] = "duplicate-focused-view"
+        data["views"].append(duplicate)
+        self.assert_invalid(data, "duplicate focused module view")
+        data = fixture()
+        data["views"][-1]["contextElementIds"].remove("inventory")
+        self.assert_invalid(data, "not a strict descendant")
+        data = fixture()
+        data["views"][-1]["contextElementIds"].append("access")
+        self.assert_invalid(data, "must be a subset")
+        data = fixture()
+        data["views"][-1]["contextElementIds"].append("txn-check")
+        self.assert_invalid(data, "belongs to the focus subtree")
+
+    def test_context_nodes_cannot_create_navigation_cycles(self):
+        data = fixture()
+        leaf = data["views"][-1]
+        leaf["elementIds"].append("orders")
+        leaf["contextElementIds"].append("orders")
+        renderer.validate_data(data)
+        leaf["contextElementIds"].remove("orders")
+        self.assert_invalid(data, "drilldown navigation contains a cycle")
+        data = fixture()
+        focused = data["views"][-2]
+        focused["elementIds"].append("orders")
+        self.assert_invalid(data, "drilldown navigation contains a cycle")
+
+    def test_focus_and_context_are_only_for_module_scopes_with_internals(self):
+        data = fixture()
+        data["views"][0]["focusElementId"] = "orders"
+        self.assert_invalid(data, "only valid on module views")
+        data = fixture()
+        data["views"][1]["contextElementIds"] = ["access"]
+        self.assert_invalid(data, "requires a focused module view")
+        data = fixture()
+        data["views"][-1]["contextElementIds"] = list(data["views"][-1]["elementIds"])
+        self.assert_invalid(data, "at least one internal descendant")
+
+    def test_connector_semantics_are_optional_bounded_declarations(self):
+        data = fixture()
+        data["relationships"][0]["semantics"] = "async"
+        data["flows"][0]["transitions"][0]["semantics"] = "branch"
+        renderer.validate_data(data)
+        data["relationships"][0]["semantics"] = "currently_running"
+        self.assert_invalid(data, "must be one of")
+
+
 class RenderTests(unittest.TestCase):
     def test_single_file_html_embeds_exact_data_and_provenance(self):
         data = fixture()
