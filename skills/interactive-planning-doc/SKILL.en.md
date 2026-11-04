@@ -6,7 +6,7 @@ description: >-
 metadata:
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T12:23:38Z"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
 # Interactive Planning Doc
@@ -345,8 +345,6 @@ Acceptance:
 
 Before finalizing the plan, verify:
 
-- The `description` still accurately triggers this skill and does not contain
-  one-project-only details.
 - Project-local plans and intermediate files use the unified workspace; formal
   deliverables follow the requested destination. There are no duplicate main plans
   or long-term legacy-path fallbacks.
@@ -355,7 +353,7 @@ Before finalizing the plan, verify:
 - Confirmed decisions are easy to find.
 - Remaining questions are explicit and few.
 - Milestones are fine-grained enough to prevent broad interpretation.
-- Commit groups are fewer than milestones and map to coherent review stages.
+- Commit groups map to coherent review stages, with no required numerical relationship to milestones; one milestone may correspond to one commit.
 - Cleanup is not used as a bucket for unfinished development work.
 - Version, release, migration, and user-data rules are included when relevant.
 - The plan does not duplicate long-term facts that can be read from `AGENTS.md`,

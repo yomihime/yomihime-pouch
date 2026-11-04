@@ -96,10 +96,20 @@ def resource_rows(path: Path) -> list[tuple[str, str]]:
 
 
 def short_text(text: str, limit: int) -> str:
+    if limit <= 0:
+        raise ValueError("text limit must be positive")
     normalized = " ".join(text.replace("\n", "\\n").split())
     if len(normalized) <= limit:
         return normalized
-    return normalized[: limit - 1] + "..."
+    marker = "." * min(3, limit)
+    return normalized[: limit - len(marker)] + marker
+
+
+def positive_text_limit(value: str) -> int:
+    limit = int(value)
+    if limit <= 0:
+        raise argparse.ArgumentTypeError("text limit must be positive")
+    return limit
 
 
 def flatten_json_strings(value: object, prefix: tuple[str, ...] = ()) -> list[tuple[str, str]]:
@@ -306,7 +316,8 @@ def main() -> int:
         default=[],
         help="Only include i18n files for this locale. Repeat for multiple locales.",
     )
-    parser.add_argument("--text-limit", type=int, default=80)
+    parser.add_argument("--text-limit", type=positive_text_limit, default=80,
+                        help="Maximum preview characters, including ellipsis; must be positive. JSONL retains full text.")
     parser.add_argument("--max-entries", type=int, default=0, help="Limit entries for preview runs.")
     args = parser.parse_args()
 

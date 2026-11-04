@@ -153,6 +153,33 @@ class DraftTreeTests(unittest.TestCase):
         self.assertNotIn("zh_CN:home_save", result.stdout)
 
 
+    def test_text_limit_includes_ellipsis_and_handles_small_limits(self):
+        self.write("i18n/zh.json", json.dumps({"label": "文" * 100}))
+        for limit in (1, 2, 3, 4, 80, 100, 101):
+            with self.subTest(limit=limit):
+                result = run_script(TREE, "--root", self.root, "--text-limit", limit)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                text = next(line.split(" text=", 1)[1] for line in result.stdout.splitlines() if " text=" in line)
+                self.assertEqual(len(text), min(limit, 100))
+                if limit < 100:
+                    marker = "." * min(3, limit)
+                    self.assertEqual(text, "文" * (limit - len(marker)) + marker)
+                else:
+                    self.assertEqual(text, "文" * 100)
+
+    def test_nonpositive_text_limits_are_rejected_before_scan(self):
+        for limit in (0, -1):
+            with self.subTest(limit=limit):
+                result = run_script(TREE, "--root", self.root / "missing", "--text-limit", limit)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("text limit must be positive", result.stderr)
+                self.assertNotIn("invalid root", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+    def test_preview_limit_never_truncates_jsonl_resources(self):
+        self.write("i18n/zh.json", json.dumps({"label": "完整文字" * 30}))
+        self.assertEqual(self.scan("--text-limit", 1)[0]["text"], "完整文字" * 30)
+
     def test_invalid_roots_fail_without_output(self):
         self.write("plain-file", "not a directory")
         for root in (self.root / "missing", self.root / "plain-file"):

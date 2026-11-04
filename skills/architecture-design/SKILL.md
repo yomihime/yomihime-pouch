@@ -8,7 +8,7 @@ metadata:
   tags: "architecture"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T12:23:38Z"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
 # 架构设计 / Architecture Design
@@ -33,7 +33,7 @@ metadata:
 
 ## 一份源，三个视角
 
-使用本技能的 [结构规范](references/source-contract.md) 与 [JSON Schema](schemas/architecture.schema.json) 维护唯一标准化机器源 `architecture.json`。Agent 读取源文件及证据，网页仅渲染该源，不另写一份 Mermaid、手工图表或接口清单作为第二真源。
+使用本技能的 [结构规范](references/source-contract.md) 与 [JSON Schema](schemas/architecture.schema.json) 维护唯一标准化机器源 `architecture.json`。Agent 读取源文件及证据，网页仅渲染该源，不另写一份 Mermaid、手工图表或接口清单作为第二真源。用户要求的报告、摘要或指定格式仍须交付：将其标为派生物，注明规范源实际路径与修订及未验证项，不另行维护契约或替代唯一源；交付前回读用户指定的文件与必需字段。
 
 - **总体视图 overview**：相关系统、部署/进程边界、主要模块、数据归属和依赖方向。
 - **模块视图 module**：当前受影响模块的职责、内部组成、对外契约及允许/禁止的依赖。
@@ -45,12 +45,9 @@ metadata:
 
 ## Status, Evidence and Approval / 状态、证据和审批
 
-- `current`：该对象在所述基准已存在，有可定位证据；`planned`：已选定但尚未实现的目标；`proposed`：未采用的建议；`unknown`：尚无法确定。
-- 同一源可包含现状与目标，但必须逐对象区分；不能因方案被接受、渲染成功或任务结束就把 planned 改成 current。
-- 变更的 `decision`（draft/accepted/rejected）与 `verification`（unverified/implemented/verified）彼此独立，均不能替代用户授权。只按实际候选与测试证据升级验证状态；缺少证据的 current/implemented/verified 会被拒绝，应补证据或改为真实状态；校验器不核实证据内容，仍需人工/Agent 核验。
-- 研发进度使用独立的 `progress`：completed（已完成）、in_progress（正在开发）、incomplete（未完成）、unknown（未声明）。前三种必须有 `progressEvidence`；没有来源不推测。进度不由 status、审批、验收或父流程推导，已完成不等于已验证。
-- 关系/流程转移可用 `semantics` 区分主路径、分支、异步、返回和错误。线型与动效只是结构示意，不能表示进程正在运行、实时追踪或验收成功。
-- 证据写相对路径、定位和基准，保留未知与未验证范围。不把本地路径、候选或业务信息上传到绘图服务，不保存秘密。
+- `current` 必须有现状证据；`planned` 是已选但未实现的目标，`proposed` 是建议，`unknown` 保留未知。设计接受或渲染成功不能将目标升级为现状。
+- `decision`、`verification` 与独立 `progress` 各自依据事实；completed/in_progress/incomplete 必须有 `progressEvidence`，缺少来源保留 unknown。它们都不替代用户授权。
+- 证据记录相对路径、定位与基准，不上传项目数据或保存秘密；线型与动效不证明进程或验收状态。对象、证据和变更的完整规则见 [结构规范](references/source-contract.md#对象引用和状态)。
 
 ## Workspace and Handoff / 工作区与交接
 

@@ -8,7 +8,7 @@ metadata:
   tags: "skill-sync"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T12:46:28Z"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
 # yomihime init / 项目工作环境初始化
@@ -33,7 +33,7 @@ metadata:
 | 同一脚本 `inspect` | 一个已确认范围的技能目录，读取版本及完整内容摘要 | JSON 清单与指纹；不写文件、不验证来源真实性 |
 | 同一脚本 `compare` | 本地目录、固定候选目录，以及按需提供的可信基线或旧版映射开关 | JSON `decision` 与理由；仅给建议，不下载、安装或授权覆盖 |
 
-纯值示例：`python3 scripts/version_advisory.py versions --local 1.9.9 --candidate 1.10.0`，Windows 可使用已安装且满足版本要求的 Python 解释器。实际命令及信任前提见 [辅助工具说明](references/skill-sync.md#可选只读辅助工具)。**原生 Windows 不支持此 helper 的目录检查**：缺少所需 POSIX no-follow 能力时退出码 2，报告 `unknown` 与需人工核验，不退回不安全读取。主流程的 Agent 指导仍可按同一协议在 Windows 执行，但不能把人工/宿主工具核验称为 helper 已运行或跨平台测试通过。
+纯值示例：`python3 scripts/version_advisory.py versions --local 1.9.9 --candidate 1.10.0`。完整参数、退出码与信任前提见 [辅助工具说明](references/skill-sync.md#可选只读辅助工具)。纯值比较不读取目录、不判定安装资格；目录检查在原生 Windows 或缺少 POSIX no-follow 能力时退出码 2，报告 unknown 并交人工核验，不作不安全回退。不把纯值比较或人工检查称为安全迁移实测。
 
 ## 执行顺序
 

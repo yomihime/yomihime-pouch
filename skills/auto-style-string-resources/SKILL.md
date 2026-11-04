@@ -5,7 +5,7 @@ metadata:
   tags: "ui-copy"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T12:23:38Z"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
 # Auto Style String Resources / 程序文案风格

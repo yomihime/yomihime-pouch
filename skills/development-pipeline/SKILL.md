@@ -8,7 +8,7 @@ metadata:
   tags: "engineering-workflow"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T12:23:38Z"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
 # 开发流水线 / Development Pipeline
