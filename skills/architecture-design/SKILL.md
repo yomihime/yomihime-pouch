@@ -8,7 +8,7 @@ metadata:
   tags: "architecture"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T17:20:31Z"
+  updated_at: "2026-11-04T18:35:49Z"
 ---
 
 # 架构设计 / Architecture Design
@@ -63,13 +63,7 @@ metadata:
 | --- | --- |
 | [scripts/render_architecture.py](scripts/render_architecture.py) | 读取架构 JSON；`--validate-only` 校验，`--output` 生成新的离线 HTML。 |
 
-以下在仓库根的受控目录执行，单独安装时替换技能路径；`demo.json` 是虚构示例，不是项目证据。首次创建预览目录，再校验并渲染；更多平台与目录示例见 [示例与目录](references/examples.md)。
-
-```sh
-mkdir architecture-preview
-python3 skills/architecture-design/scripts/render_architecture.py skills/architecture-design/assets/demo.json --validate-only
-python3 skills/architecture-design/scripts/render_architecture.py skills/architecture-design/assets/demo.json --output architecture-preview/architecture-demo.html
-```
+从仓库根或安装目录使用脚本；虚构 demo、Windows/macOS/Linux 命令与目录条件统一见[示例与目录](references/examples.md)。先校验，再输出到尚不存在的文件。
 
 ## Troubleshooting and Delivery / 失败处理与交付
 

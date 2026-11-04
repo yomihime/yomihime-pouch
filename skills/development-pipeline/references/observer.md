@@ -4,7 +4,7 @@
 
 ## 按项目和运行隔离
 
-每个项目使用自己的 .agent-workspace/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录；work-id 不得占用 memory、design、architecture、plans、work、runtime.md、index.html、pipeline-index-data.js、.pipeline-index.lock，即使对应路径尚未生成，也不得与其他已有受管路径冲突。按 Windows 路径语义比较保留名时不区分大小写，尾部点或空格形成的别名同样禁止，例如 INDEX.HTML、index.html.；不要通过这些变体绕过保留名。项目固定入口为 .agent-workspace/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
+每项工作使用新的 `.agent-workspace/<work-id>/pipeline/`，不复用已完成目录，不占用受管保留名或其 Windows 别名。项目固定入口为 `.agent-workspace/index.html`。不同项目和运行不共享目录；这是路径、数据和运行身份隔离，不是操作系统沙箱。保留名、身份与索引规则见[观察器契约](observer-contract.md#文件与命令)。
 
 下图只列流水线 CLI 在相应操作中实际创建或更新的文件；不要求手工预建，也不表示 yomihime-init 会生成整棵树。
 
@@ -40,13 +40,13 @@ python -X utf8 $pipeline init $runDir --title "当前任务" --project-root .
 
 打开项目 .agent-workspace/index.html，选择运行进入其观察页；已完成的运行链接到单文件报告。也可直接打开命令输出的 observer/index.html。省略 --project-root 时，从运行目录的 .agent-workspace 祖先识别项目根；不在该布局时采用运行目录的父目录。显式指定时要求运行目录位于该项目内。显式指定其他位置的运行仍可直接操作和查看，但不因此进入项目索引。项目身份固定在初始化事件中，旧日志未记身份时显示未记录，不猜成当前项目。
 
-索引只扫描 `.agent-workspace/<work-id>/pipeline/events.jsonl`，跳过保留目录、符号链接和嵌套项目，不递归收录记忆证据、初始化暂存或备份中的日志副本。重放发现的事件日志时，不可读或损坏的日志显示读取失败，不以缓存状态冒充当前事实。completed 列为已归档，未完成且距最后事件至少 7 天列为过期，其余列为活动。归档和过期是索引分类，不移动或删除运行；过期只表示事件数据久未更新，不能证明执行者已停止，活动也不能证明进程存活。事件更新和 view 会重建索引数据，索引页每 5 秒读取该数据并按当前时间分类；需要手动重建时运行：
+索引从统一工作区的运行事件重建，显示活动、过期、已归档或读取失败；分类不证明进程是否存活，也不移动或删除文件。发现范围、刷新周期与分类阈值以[契约](observer-contract.md#文件与命令)为准。需要手动重建时运行：
 
 ```powershell
 python -X utf8 $pipeline index .
 ```
 
-运行详情页每 1.5 秒读取自己的 state.js，仅事件版本变化时重绘；单次读取超时 8 秒，独立检查 10 秒未成功读取的数据异常，保留旧图与最后成功时间。没有新事件不等于执行者离线，页面不探测真实进程。浏览器若禁止本地脚本，可用下文可选 HTTP 模式，不更改浏览器安全设置。
+运行详情页自动读取 `state.js`，读取异常时保留旧图与最后成功时间；精确时限见[状态投影](observer-contract.md#状态投影静态脚本及可选-get-apistate)。没有新事件不等于执行者离线。浏览器若禁止本地脚本，可用下文可选 HTTP 模式，不更改浏览器安全设置。
 
 ## 规划时逐步画出
 
@@ -78,9 +78,7 @@ python -X utf8 $pipeline note $runDir --target engine --text "特殊情况与下
 
 主调度者接收角色回报后统一上报；委派节点直接上报时明确 run-dir、节点 ID、允许状态和候选，不让多个 writer 竞争同一节点。锁串行化事件追加与投影更新，不替代工作区/进程资源协调。
 
-失败后停止启动新工作、跳过待执行节点或推进检查点；此前已 running 的节点仍可提交 passed/failed，候选、证据和原因要求不变。needs_decision、consulting、blocked 都接收这些在途终态，保持原有失败决策状态，不因另一个成功而恢复放行，也不因新增失败退出顾问/阻塞状态。
-
-主调度者先接收已完成的在途结果，再选择 consult、return 或 block；已经处于顾问/阻塞状态时继续接收结果。return 新增 attempt，重置目标轮及下游，旧终态及证据留在历史；未完成而实际取消/交接的节点先用 note 说明事实和必要证据位置，协调停止后再用 --quiesced。该参数不终止进程、不替代已完成结果上报，也不回滚代码或数据。
+失败后暂停新工作与推进，先接收此前已 running 节点的真实终态，再选择 consult、return 或 block；成功回报不解除已有失败决策状态。返回前记录取消或交接依据，实际协调停止后才用 `--quiesced`；该参数不终止进程或回滚数据，也不能替代已完成结果上报。允许的状态转换、attempt 重置和证据要求以[计划契约](observer-contract.md#计划-json)为准。
 
 ## 完成即结束，保留结果
 

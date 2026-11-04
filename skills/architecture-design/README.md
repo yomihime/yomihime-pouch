@@ -14,7 +14,7 @@
 
 ## 看一张实际示例图
 
-Python 3.9+，仅标准库，无需安装依赖。在仓库根运行下面的命令即可生成离线示例页面。HTML 从 [虚构示例源](assets/demo.json) 生成，只维护 JSON 与 viewer 源，不手工修改 HTML。
+Python 3.9+，仅标准库，无需安装依赖。按[示例与目录](references/examples.md)中的命令在仓库根生成离线示例页面。HTML 从 [虚构示例源](assets/demo.json) 生成，只维护 JSON 与 viewer 源，不手工修改 HTML。
 
 完整的 Windows PowerShell 与 macOS/Linux 命令、目录条件及页面操作见 [示例与目录](references/examples.md)。输出文件必须尚不存在；不删除或覆盖旧文件，选择受控且稳定的目录。POSIX 拒绝祖先符号链接与 `..`；Windows 后备路径仅经模拟回归，未做原生 Windows 实测。写入失败可能留下部分新文件，先核对再换新名称重试。
 
