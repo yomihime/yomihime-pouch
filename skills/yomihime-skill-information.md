@@ -120,7 +120,7 @@ Python **205 项：204 通过、1 项可选 Chromium 跳过**；3 套 DOM 回归
 
 运行问题与处理单列：初次扫描器默认安装目录只读；通过官方支持的 runtime/cache 目录安装后，uv 子进程的隔离环境仍缺少缓存配置，改用官方支持的扫描器可执行路径配置。未改扫描规则或隔离设置。架构测试生成的未跟踪 `__pycache__` 一度触发分发内容命中；只清理本轮缓存后重跑，最终表使用干净源码结果，源码与测试均保留。
 
-embedding 本地适配仅将请求保序切成至多 10 条，沿用官方向量索引校验；0、1、10、11、25 条及响应乱序测试通过，没有截断输入。官方 Tier 3 和 Harbor 独立双臂本轮均未重跑；下节保留历史超时、触发未确认与检查器缺陷，不能由本轮文本案例推出这些缺口已修复。
+embedding 本地适配仅将请求保序切成至多 10 条，沿用官方向量索引校验；0、1、10、11、25 条及响应乱序测试通过，没有截断输入。初轮未执行官方 Tier 3，随后补试的实际结果见下节。Harbor 独立双臂未重跑；历史超时、触发未确认与检查器缺陷仍保留，不能由本轮文本案例推出这些缺口已修复。
 
 ### 本轮用量与限制
 
@@ -128,7 +128,48 @@ embedding 本地适配仅将请求保序切成至多 10 条，沿用官方向量
 - NVIDIA Tier 2 与相似度检查：embedding **43,684 token**，聊天输入 **16,911**、输出 **1,679 token**，包含架构目录段再次精简后的重跑。Tier 1 不调用模型。
 - 已知聊天合计输入 **536,531**、输出 **7,324 token**；因早期探针缺计量，这是下限。未单列缓存 token，未重复相加；接口未提供可核验金额，费用以百炼账单为准。
 
-本轮没有 API 超时或最终案例执行错误，也没有尝试完整官方 Tier 3。原始响应、报告和元数据不随 PR 发布；本文件只记录可公开的输入版本、方法、结果与限制。
+上述文本评测和 Tier 2 没有 API 超时或最终案例执行错误；官方 Tier 3 补试在启动阶段失败，未形成有效成绩。原始响应、报告和元数据不随 PR 发布；本文件只记录可公开的输入版本、方法、结果与限制。
+
+### Tier 1 细分原因补查
+
+最终 Tier 1 的三个 failed 分别由以下阻断项造成；八项同时含 SkillSpector partial，QUALITY 达标不会覆盖这些状态。
+
+| 技能 | 阻断规则与位置 | 语境核对 |
+| --- | --- | --- |
+| auto-style-string-resources | E2：`tests/subprocess_support.py:14`；AR2：`tests/test_string_helpers.py:4` | 环境遍历实际为白名单过滤；“do not judge”说明测试不判断文案自然度。属于语境误报，原失败状态保留 |
+| interactive-planning-doc | PII `emails`：`SKILL.en.md:7` | 作者邮箱是真实地址，用户明确要求保留；检测正确，但与作者元数据要求冲突 |
+| yomihime-init | TM1：`SKILL.md:78`；SC2：`references/skill-sync.md:94` | 两处均明确禁止危险命令；不能解释为要求执行，原失败状态保留 |
+
+以相同 SkillSpector 2.13.3、`--no-llm` 对干净技能目录补查，八项均 `execution_successful=true`。细分账本如下；百分比为扫描器报告的文件覆盖，不是安全成功率。
+
+| 技能 | 文件覆盖率 | reference_missing | static_parse_limit |
+| --- | ---: | ---: | ---: |
+| architecture-design | 89.5% | 3 | 2 |
+| auto-style-string-resources | 100% | 9 | 0 |
+| development-pipeline | 91.3% | 5 | 2 |
+| interactive-planning-doc | 100% | 4 | 0 |
+| multi-agent-engineering | 100% | 2 | 0 |
+| project-memory | 100% | 2 | 0 |
+| ui-design | 100% | 4 | 0 |
+| yomihime-init | 100% | 6 | 0 |
+
+`reference_missing` 出现在运行时 `.agent-workspace/`、`AGENTS.md` 等路径，以及 API 名或数字版本所在行；它不等于 Markdown 链接断裂，也不要求为扫描器伪造这些项目文件。静态解析跨度限制涉及架构的 `assets/viewer.js`、`tests/test_viewer_dom.cjs`，以及流水线的 `assets/observer/app.js`、`tests/test_index_dom.cjs`。这是实际静态覆盖限制，DOM 通过不能将其改写成完整安全扫描通过。未启用的语义 LLM 分析器也不在本轮覆盖内。
+
+### 官方 Tier 3 小规模补试
+
+在前述未执行说明之后，实际使用固定 **SkillEvaluator 0.7.2 / f878f99、Harbor 0.24.0** 补试 `development-pipeline`。官方 agent 选择 **OpenCode**，模型参数 **openai/qwen-flash**，provider 为百炼 OpenAI-compatible；未使用 Qwen Code 或独立 Harbor 试验冒充官方路径。OpenCode 尚未进入容器安装执行阶段，未取得其实际版本。
+
+一个合成案例 `inflight-state-retention` 同时包含 consulting 下接收 passed、blocked 下接收 failed 两条记录，要求写出决策 JSON。两臂使用同一案例，attempts=1、concurrency=1、max-cases=1、timeout-multiplier=0.6，保留 baseline，采用官方 `default_plus_custom`。附加判定检查两条记录完整性、状态保留、接收终态、新工作禁令与 quiesced 无终止副作用；离线正例、缺失产物、错误状态检查通过。数据集与 grader 契约验证通过，未执行任何评分标准降级。
+
+实际运行经过以下阶段：
+
+- Docker **29.9.2**、Compose **2.40.3**、Harbor 与官方 doctor 通过；OpenCode 模型配置被解析接受。独立容器中宿主 checkout 不可见，经既有代理及只读 CA 挂载访问百炼得到未认证 401，证明网络/TLS 路径可达，不证明推理凭据或完整 agent 路由成功。
+- 第一次官方 evaluate 因默认状态目录只读而停止；改用官方支持的 `XDG_STATE_HOME` 后再次执行。官方实时目录验证提示“不能证明运行凭据”，按其 degraded 路径继续。
+- 第二次已规划有技能和无技能两臂，但 Harbor CLI 的首次通知逻辑硬编码写入 `~/.cache/harbor/notifications.json`，home 为只读，返回 Errno 30。两臂均在 trial 启动前失败，没有 agent 或 verifier 成绩。
+
+最终官方报告为 **INCOMPLETE**，机器字段 `execution_status=failed`，**expected_attempts=2、scored_attempts=0**；两臂分数均不可用，触发状态 unknown，lift 未测量。这是本轮确实执行后的环境阻碍，不是沿用历史失败。未改写 HOME、放宽权限或补丁绕过缓存限制；继续需要环境提供可写的默认 Harbor 缓存位置，或上游提供受支持的缓存路径配置。
+
+此次补试新增 agent/verifier 推理调用 **0**，没有新增已计量聊天或 embedding token；模型目录/连通性检查不作为推理成绩，也不据此声称账单金额为零。原始任务、报告与元数据保留在仓库外，只发布本汇总。评测专用临时文件已从技能目录移出，运行技能内容仍为 `b82cd4771044ca66544ff3b781e2c5973005afe8`。PR 描述更新此前失败，本次未重试或换路。
 
 ## 历史评估（2026-11-04，3560987）
 
