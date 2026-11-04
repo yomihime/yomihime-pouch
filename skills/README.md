@@ -4,6 +4,8 @@
 
 维护者请参阅 [技能维护规范](./SKILL_STANDARD.md)；单独安装的技能应自包含运行所需内容。
 
+集合介绍、公共 spec 导览和带限制说明的评估流程见 [Yomihime Skill Information](./yomihime-skill-information.md)。
+
 ## 🌸 已收录
 
 | 技能名称 | 用途 | 目录 |

@@ -92,3 +92,7 @@ node skills/architecture-design/tests/test_viewer_dom.cjs
 ## 许可
 
 本技能使用 [MIT License](LICENSE)，可单独分发。示例为虚构数据，不包含项目私有材料。
+
+## 运行条件与触发边界
+
+渲染器需要 Python 3.9+ 标准库和同目录 Schema/assets。 具体触发正反例、平台限制与实测范围见 [SKILL.md](SKILL.md#触发示例与运行要求)。

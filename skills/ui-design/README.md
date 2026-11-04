@@ -23,3 +23,7 @@
 本技能独立撰写；界面设计工作流的探索参考了 [Anthropic frontend-design](https://github.com/anthropics/skills/tree/main/skills/frontend-design) 的思路，未复制其文本、代码或素材。该技能单独使用 [Apache-2.0 许可证](https://github.com/anthropics/skills/blob/main/skills/frontend-design/LICENSE.txt)；这是对上游的致谢，不代表本技能包含上游作品。其他官方资料仅以链接列于资源目录，其软件、文档、字体和示例可能有不同条款。
 
 本 `ui-design` 技能以 [Apache-2.0](./LICENSE) 发行。资源目录中第三方软件、文档、字体和素材各自适用其许可证，本技能许可证不覆盖这些第三方内容。
+
+## 运行条件与触发边界
+
+本技能无运行脚本，无 Python、Node.js 或特定操作系统依赖；实际执行依赖宿主文件工具与任务所需能力。 具体触发正反例、平台限制与实测范围见 [SKILL.md](SKILL.md#触发示例与运行要求)。

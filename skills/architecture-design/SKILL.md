@@ -5,14 +5,26 @@ description: >-
   用同一结构化图纸供 Agent 实施及离线只读网页查看。适用于架构设计、架构梳理和需要明确边界的工程变更，
   不为局部修复或单点问答强制建立全仓架构。
 metadata:
-  version: "2026-11-04T00:41:00Z"
+  tags: "architecture"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T12:23:38Z"
 ---
 
-# 架构设计
+# 架构设计 / Architecture Design
 
 作为 project-memory 的架构补充（plus），把项目图纸集中在稳定位置，提供可定位的关系、契约、进度与分层视图；不替代项目完整当前快照，也不要求必须安装 project-memory。以当前任务能够正确实施、验证和交接为目标。先判断架构形态是否合适，再选择图的表达方式；图的层数和漂亮程度不是完成标准。架构师提出技术选择，主调度者接收并协调，图纸不授予实现、迁移、部署或发布权限。
 
-## 入口与选择
+<a id="触发示例与运行要求"></a>
+
+## Prerequisites / 触发示例与运行要求
+
+- 使用："梳理支付模块现状，再设计这次退款流程的边界与契约"；"为新项目选架构并生成离线图纸"。
+- 不使用："解释依赖注入是什么"；"改正这个变量拼写"。只有局部实现问题且已有契约足够时，不建立全仓架构。
+- 设计指导本身不依赖 Python；运行 `scripts/render_architecture.py` 需要 **Python 3.9+，仅标准库**，完整保留同目录的 Schema 与 assets。3.9 下限来自 `str.removeprefix`；这不是所有 3.9+ 版本均已运行验证的声明。
+- 本轮 CLI 校验与 HTML 生成实测于 Linux x86_64、Python 3.12.14 / 3.13.5。macOS、原生 Windows 和 Python 3.9 未实测；输出目录的 POSIX 防符号链接检查及 Windows 后备限制见下文。查看页面需支持 JavaScript 的浏览器；生成成功不等于真实浏览器视觉验收。
+
+## Scope and Workflow / 入口与选择
 
 1. 遵循有效 AGENTS/override、用户要求和已有主计划，先从有效 AGENTS 或项目记忆入口发现已有规范源，再考虑新建。采用 project-memory 时主调度者先恢复完整 current.md；架构子 Agent 读取获配的相关约束、图纸、候选和原始证据，不默认读取全体记忆。跨任务沿用同一图纸入口，不因新 work-id 复制或重建现状。
 2. 先判断本任务是否真的需要设计：已知契约足够的局部修改可直接复用，不生成完整图集，不先测绘全仓。有边界、数据归属、协议、部署或迁移决策时，按 [工作方式](references/workflow.md) 选择相应深度。
@@ -31,7 +43,7 @@ metadata:
 
 实现前按 [实施交接](references/implementation-handoff.md) 检查输入/输出、错误处理、规则、状态、验收样例和未知项。让经验较少或能力较弱的执行模型也能知道改哪里、调用什么、遇到失败怎么办、如何证明完成，而不是自行猜关键语义。结构校验只证明格式与引用一致，不证明设计正确或代码存在。
 
-## 状态、证据和审批
+## Status, Evidence and Approval / 状态、证据和审批
 
 - `current`：该对象在所述基准已存在，有可定位证据；`planned`：已选定但尚未实现的目标；`proposed`：未采用的建议；`unknown`：尚无法确定。
 - 同一源可包含现状与目标，但必须逐对象区分；不能因方案被接受、渲染成功或任务结束就把 planned 改成 current。
@@ -40,7 +52,7 @@ metadata:
 - 关系/流程转移可用 `semantics` 区分主路径、分支、异步、返回和错误。线型与动效只是结构示意，不能表示进程正在运行、实时追踪或验收成功。
 - 证据写相对路径、定位和基准，保留未知与未验证范围。不把本地路径、候选或业务信息上传到绘图服务，不保存秘密。
 
-## 工作区、验证与交付
+## Workspace and Handoff / 工作区与交接
 
 新的长期规范源默认按需建立在 `.agent-workspace/architecture/architecture.json`，不放任务清理目录；已有有效唯一源原位复用，包括位于旧任务目录或 memory/references 的源，不为套新路径自行迁移。若既有权威是 Markdown 等非标准 JSON，先保留其地位并协调获准转换；没有确认唯一权威及转换范围前，不旁建竞争 JSON 或擅自将原文降为摘要。通过允许修改的既有 AGENTS 或 `.agent-workspace/memory/current.md` 保留实际路径、范围和修订入口；已有有效入口只做必要更新，不重复创建另一套索引。入口无法更新时报告缺口，不声称跨任务交接已完成。
 
@@ -48,7 +60,23 @@ metadata:
 
 长期源、必要证据和有效入口不属于任务 scratch，任务/Agent 回收不能删除它们。已有规范源即使仍位于任务目录，只要仍有效、正在交接或被入口引用就受保护；尚未获准建立持久入口也不能据此删除源或必要证据。在获准迁移、入口更新和可达性核验完成前不得清理。HTML 可从源重建，但“可重建”不是删除授权，也不能替代原始证据。
 
-使用 [示例与目录](references/examples.md) 中的命令先验证，再显式输出离线 HTML。渲染器只读源，拒绝覆盖已有输出，不修改记忆、不启动服务、不监听文件、不自动同步、不自动写回；更新源后需要明确重新生成到新输出路径。页面带源修订和 SHA-256，旧页面就是旧快照。输出使用稳定受控目录；POSIX 需无祖先符号链接，Windows 支持原生排他新建但本环境未原生实测。写入失败可能留下部分新文件，工具不自动删除，按参考说明核对后重试。
+## Available Scripts / 脚本与示例
+
+| Script / 脚本 | Purpose and Input / 用途与输入 |
+| --- | --- |
+| [scripts/render_architecture.py](scripts/render_architecture.py) | 读取架构 JSON；`--validate-only` 校验，`--output` 生成新的离线 HTML。 |
+
+以下在仓库根的受控目录执行，单独安装时替换技能路径；`demo.json` 是虚构示例，不是项目证据。首次创建预览目录，再校验并渲染；更多平台与目录示例见 [示例与目录](references/examples.md)。
+
+```sh
+mkdir architecture-preview
+python3 skills/architecture-design/scripts/render_architecture.py skills/architecture-design/assets/demo.json --validate-only
+python3 skills/architecture-design/scripts/render_architecture.py skills/architecture-design/assets/demo.json --output architecture-preview/architecture-demo.html
+```
+
+## Troubleshooting and Delivery / 失败处理与交付
+
+渲染器只读源，拒绝覆盖已有输出，不修改记忆、不启动服务、不监听文件、不自动同步、不自动写回；更新源后需要明确重新生成到新输出路径。页面带源修订和 SHA-256，旧页面就是旧快照。输出使用稳定受控目录；POSIX 需无祖先符号链接，Windows 支持原生排他新建但本环境未原生实测。写入失败可能留下部分新文件，工具不自动删除，按参考说明核对后重试。
 
 工作区与含项目数据的 HTML 默认本地私有，不暂存、提交、上传或混入构建产物。沿用已有隐私与忽略规则，遇到 tracked/staged 或并发冲突保留原状并报告。单独安装本技能即可执行设计和标准库渲染；development-pipeline、multi-agent-engineering、project-memory、yomihime-init 都是可选协作，不是安装前提，不自动安装其他技能或整理旧材料。
 

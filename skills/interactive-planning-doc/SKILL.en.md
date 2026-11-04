@@ -1,14 +1,12 @@
 ---
 name: interactive-planning-doc
 description: >-
-  Use this skill when Codex needs to create, revise, or finalize a planning
-  document through iterative user discussion before implementation. Trigger for
-  docs-only planning sessions, architecture/refactor plans, feature milestones,
-  TODO resolution plans, commit cadence design, validation criteria, acceptance
-  cleanup, version/release preparation, or when the user says not to change code
-  and wants decisions written into a reusable plan document.
+  Create or revise engineering plans through discussion, with milestones,
+  validation and acceptance criteria. Use before implementation, not for coding.
 metadata:
-  version: "2026-11-03T17:20:00Z"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T12:23:38Z"
 ---
 
 # Interactive Planning Doc
@@ -16,6 +14,12 @@ metadata:
 Use this skill to turn an evolving product or engineering discussion into a
 clean plan document that another agent can execute later. Keep the document
 practical, specific, and free of conversational noise.
+
+## Trigger Examples and Runtime Requirements
+
+- Use: "Do not change code yet; turn our refactor discussion into an executable plan" or "Update the main plan's milestones and acceptance criteria."
+- Do not use: "Implement the approved fix and run tests," "Explain this algorithm," or "Polish an email." TODO or release keywords alone do not make a request a planning-document task.
+- This is document guidance with no runtime scripts and no Python, Node.js or operating-system requirement. The host must be able to read relevant materials and, when authorized, edit the plan. Project tools are needed only when checking project-specific assumptions; verify actual host capabilities rather than claiming universal client coverage.
 
 ## Ground Rules
 

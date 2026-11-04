@@ -6,7 +6,7 @@ from html.parser import HTMLParser
 import importlib.util
 import json
 from pathlib import Path
-import subprocess
+from architecture_test_processes import IsolatedProcesses
 import sys
 import tempfile
 import unittest
@@ -419,6 +419,7 @@ class RenderTests(unittest.TestCase):
 
 class CLITests(unittest.TestCase):
     def setUp(self):
+        self.processes = IsolatedProcesses(self)
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
@@ -428,7 +429,7 @@ class CLITests(unittest.TestCase):
         self.output = self.root / "view.html"
 
     def run_cli(self, *args, source=None):
-        return subprocess.run([sys.executable, str(ROOT / "scripts" / "render_architecture.py"), str(source or self.source), *map(str, args)], capture_output=True, text=True)
+        return self.processes.run([sys.executable, str(ROOT / "scripts" / "render_architecture.py"), str(source or self.source), *map(str, args)], capture_output=True, text=True)
 
     def test_validate_and_render_workflow_preserves_source(self):
         result = self.run_cli("--validate-only")

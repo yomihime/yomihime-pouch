@@ -8,8 +8,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
+from unittest.mock import patch
 import unittest
 
 
@@ -18,15 +18,7 @@ TREE = SCRIPTS / "draft_string_tree.py"
 CONSTRAINTS = SCRIPTS / "check_string_constraints.py"
 
 
-def run_script(script, *args):
-    return subprocess.run(
-        [sys.executable, str(script), *map(str, args)],
-        check=False,
-        text=True,
-        capture_output=True,
-        encoding="utf-8",
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-    )
+from subprocess_support import minimal_environment, run_script
 
 
 class ConstraintCheckerTests(unittest.TestCase):
@@ -104,8 +96,8 @@ class DraftTreeTests(unittest.TestCase):
     def scan(self, *args):
         result = run_script(TREE, "--root", self.root, "--format", "jsonl", *args)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stderr, "")
-        return [json.loads(line) for line in result.stdout.splitlines()]
+        self.assertIn("scan complete:", result.stderr)
+        return [json.loads(line) for line in result.stdout.split("\n") if line]
 
     def test_locale_filter_nested_json_and_unicode(self):
         self.write("i18n/zh_CN.json", json.dumps({"home": {"button_save": "保存 {name}", "items": ["取消", 1, "确定"]}}, ensure_ascii=False))
@@ -128,7 +120,12 @@ class DraftTreeTests(unittest.TestCase):
         self.write("elsewhere/window.py", 'widget.setText("outside scanned roots")\n')
         self.write("README.md", "This visible product wording is not scanned")
         self.write("docs/help.md", "This help text is not scanned either")
-        rows = self.scan()
+        result = run_script(TREE, "--root", self.root, "--format", "jsonl")
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("scan partial:", result.stderr)
+        self.assertIn("broken.py", result.stderr)
+        self.assertIn("SyntaxError", result.stderr)
+        rows = [json.loads(line) for line in result.stdout.split("\n") if line]
         texts = [r["text"] for r in rows]
         self.assertIn("保存", texts)
         self.assertIn("ファイルを開く", texts)
@@ -154,6 +151,151 @@ class DraftTreeTests(unittest.TestCase):
         self.assertNotIn("CharaPicker strings", result.stdout)
         self.assertIn("欢迎来到这里", result.stdout)
         self.assertNotIn("zh_CN:home_save", result.stdout)
+
+
+    def test_invalid_roots_fail_without_output(self):
+        self.write("plain-file", "not a directory")
+        for root in (self.root / "missing", self.root / "plain-file"):
+            with self.subTest(root=root):
+                result = run_script(TREE, "--root", root)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("invalid root", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+    def test_valid_empty_projects_and_files_are_successful(self):
+        self.assertEqual(self.scan(), [])
+        self.write("i18n/en.json", "{}")
+        self.write("gui/empty.py", "# no strings\n")
+        result = run_script(TREE, "--root", self.root, "--format", "jsonl")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("2 file(s) parsed, 0 error(s), 0 candidate(s)", result.stderr)
+        self.assertEqual(result.stdout, "")
+
+    def test_bad_json_and_python_are_all_failed_not_empty_success(self):
+        self.write("i18n/en.json", "{invalid")
+        self.write("gui/broken.py", "def broken(:\n")
+        before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        result = run_script(TREE, "--root", self.root)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("scan failed: 0 file(s) parsed, 2 error(s)", result.stderr)
+        self.assertIn("JSONDecodeError", result.stderr)
+        self.assertIn("SyntaxError", result.stderr)
+        self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()})
+
+    def test_jsonl_parses_multiple_records_and_reports_physical_lines(self):
+        self.write("i18n/zh.jsonl", '{"home_title":"欢迎"}\n\n{"home_save":"保存"}\n')
+        rows = self.scan()
+        self.assertEqual([r["text"] for r in rows], ["欢迎", "保存"])
+        self.assertEqual([r["page"] for r in rows], ["home", "home"])
+        self.assertEqual([r["key"] for r in rows], ["zh:L1.home_title", "zh:L3.home_save"])
+        self.assertTrue(all(r["source"] == "i18n/zh.jsonl" for r in rows))
+
+    def test_jsonl_unicode_separators_are_string_content_not_record_boundaries(self):
+        for separator in ("\u0085", "\u2028", "\u2029"):
+            with self.subTest(separator=repr(separator)):
+                text = f"before{separator}after"
+                self.write("i18n/en.jsonl", json.dumps({"home_title": text}, ensure_ascii=False) + "\n")
+                rows = self.scan()
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(rows[0]["text"], text)
+                self.assertEqual(rows[0]["key"], "en:L1.home_title")
+
+    def test_jsonl_crlf_and_blank_lines_preserve_physical_line_numbers(self):
+        path = self.root / "i18n/en.jsonl"
+        path.parent.mkdir()
+        path.write_bytes(b'\r\n{"home_title":"first"}\r\n \t\r\n{"home_save":"second"}\r\n')
+        rows = self.scan()
+        self.assertEqual([r["key"] for r in rows], ["en:L2.home_title", "en:L4.home_save"])
+        self.assertEqual([r["text"] for r in rows], ["first", "second"])
+        path.write_bytes(b'\r\n{"home_title":"first"}\r\n \t\r\n{invalid\r\n')
+        result = run_script(TREE, "--root", self.root, "--format", "jsonl")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("JSONL line 4", result.stderr)
+        self.assertEqual(result.stdout, "")
+
+    def test_jsonl_bare_cr_is_not_a_record_separator(self):
+        path = self.root / "i18n/en.jsonl"
+        path.parent.mkdir()
+        path.write_bytes(b'{"home_title":"first"}\r{"home_save":"second"}')
+        result = run_script(TREE, "--root", self.root, "--format", "jsonl")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("JSONL line 1", result.stderr)
+
+    def test_bad_jsonl_is_atomic_and_good_file_still_emitted(self):
+        self.write("i18n/en.jsonl", '{"title":"discard this"}\n{invalid\n')
+        self.write("i18n/zh.json", '{"title":"保留"}')
+        result = run_script(TREE, "--root", self.root, "--format", "jsonl")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("JSONL line 2", result.stderr)
+        self.assertIn("scan partial: 1 file(s) parsed, 1 error(s)", result.stderr)
+        self.assertEqual([json.loads(line)["text"] for line in result.stdout.split("\n") if line], ["保留"])
+
+    def test_each_parser_failure_alone_fails(self):
+        for filename, content, diagnostic in (
+            ("i18n/en.json", "{bad", "JSONDecodeError"),
+            ("gui/broken.py", "def broken(:", "SyntaxError"),
+            ("i18n/en.jsonl", '{"ok":"discard"}\n{bad', "JSONL line 2"),
+        ):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as folder:
+                path = Path(folder) / filename
+                path.parent.mkdir(parents=True)
+                path.write_text(content, encoding="utf-8")
+                result = run_script(TREE, "--root", folder, "--format", "jsonl")
+                self.assertEqual(result.returncode, 2)
+                self.assertEqual(result.stdout, "")
+                self.assertIn(diagnostic, result.stderr)
+
+    def test_successful_scan_does_not_modify_sources(self):
+        self.write("i18n/zh.jsonl", '{"home_title":"欢迎"}\n{"home_save":"保存"}\n')
+        self.write("gui/home.py", 'widget.setText("保存")\n')
+        before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        self.scan()
+        self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()})
+
+    def test_bad_encoding_is_reported(self):
+        (self.root / "i18n").mkdir()
+        (self.root / "i18n/en.json").write_bytes(b"\xff")
+        result = run_script(TREE, "--root", self.root)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("UnicodeDecodeError", result.stderr)
+
+    def test_scan_locations_must_be_directories(self):
+        self.write("i18n", "not a directory")
+        self.write("gui", "not a directory")
+        result = run_script(TREE, "--root", self.root)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("NotADirectoryError", result.stderr)
+
+
+class SubprocessSafetyTests(unittest.TestCase):
+    def test_sensitive_environment_and_python_hooks_are_not_inherited(self):
+        with tempfile.TemporaryDirectory() as folder:
+            script = Path(folder) / "inspect_env.py"
+            script.write_text("import json, os; print(json.dumps(dict(os.environ)))", encoding="utf-8")
+            with patch.dict(os.environ, {"AWS_SECRET_ACCESS_KEY": "sentinel", "OPENAI_API_KEY": "sentinel",
+                                         "PRIVATE_TOKEN": "sentinel", "PYTHONPATH": "sentinel",
+                                         "LANG": "C.UTF-8"}):
+                result = run_script(script)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                env = json.loads(result.stdout)
+                for name in ("AWS_SECRET_ACCESS_KEY", "OPENAI_API_KEY", "PRIVATE_TOKEN", "PYTHONPATH"):
+                    self.assertNotIn(name, env)
+                self.assertEqual(env["LANG"], "C.UTF-8")
+
+    def test_platform_environment_preserves_only_explicit_allowlist(self):
+        with patch.dict(os.environ, {"SystemRoot": "C:\\Windows", "LC_CTYPE": "C", "HOME": "private"}, clear=True):
+            env = minimal_environment()
+            self.assertEqual(env["SystemRoot"], "C:\\Windows")
+            self.assertEqual(env["LC_CTYPE"], "C")
+            self.assertNotIn("HOME", env)
+
+    def test_timeout_is_enforced(self):
+        with tempfile.TemporaryDirectory() as folder:
+            script = Path(folder) / "wait.py"
+            script.write_text("import time; time.sleep(30)", encoding="utf-8")
+            with self.assertRaises(subprocess.TimeoutExpired):
+                run_script(script, timeout=0.1)
 
 
 if __name__ == "__main__":

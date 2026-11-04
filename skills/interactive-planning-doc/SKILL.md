@@ -1,19 +1,24 @@
 ---
 name: interactive-planning-doc
 description: >-
-  Use this skill when Codex needs to create, revise, or finalize a planning
-  document through iterative user discussion before implementation. Trigger for
-  docs-only/no-code planning sessions, architecture or refactor plans, feature
-  milestones, TODO resolution plans, commit cadence design, validation criteria,
-  acceptance cleanup, version/release preparation, or when the user asks to
-  avoid code changes and capture decisions in a reusable execution plan.
+  Create or revise engineering plans through discussion, with milestones,
+  validation and acceptance criteria. Use before implementation, not for coding.
 metadata:
-  version: "2026-11-03T17:20:00Z"
+  tags: "engineering-plans"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T12:23:38Z"
 ---
 
-# Interactive Planning Doc
+# Interactive Planning Doc / 交互式工程计划
 
 把持续变化的产品或工程讨论整理成可执行的计划文档。目标读者是未来负责实现的 agent，而不是当前聊天参与者。
+
+## 触发示例与运行要求
+
+- 使用："先不要改代码，把重构讨论整理成可执行计划"；"更新主计划中的里程碑和验收标准"。
+- 不使用："按已确认方案立即修复并跑测试"；"只解释这个算法"；"润色一封邮件"。实现、知识问答和一般文案不应因含有 TODO 或版本等词而触发计划文档流程。
+- 本技能为文档指导，无运行脚本，不要求 Python、Node.js 或特定操作系统。需要宿主能读取任务资料，并在获准时编辑计划；项目测试工具只有实际验证计划中的假设时才需要。宿主能力与项目平台须现场核实，未声称在所有客户端端到端测试过。
 
 ## 基本原则
 
