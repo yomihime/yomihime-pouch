@@ -8,7 +8,7 @@ metadata:
   tags: "architecture"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T18:35:49Z"
+  updated_at: "2026-11-04T18:42:49Z"
 ---
 
 # 架构设计 / Architecture Design

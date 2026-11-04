@@ -38,9 +38,9 @@ architecture-design/
   tests/                          结构、语义与渲染回归
 ```
 
-项目中新的长期规范源默认放 `.agent-workspace/architecture/architecture.json`，按需创建，不随任务目录清理。已有有效唯一源原位复用，不自动迁移、覆盖或创建平行 JSON；既有 Markdown 权威须先确认获准转换范围，不能旁建 JSON 后自动取代它；实际路径/范围/修订通过既有 AGENTS 或项目记忆入口跨任务发现。`memory/current.md` 仍是唯一完整当前状态，直接说明关键事实并引用详细源。
+没有既有有效源时，新的长期规范源按需放 `.agent-workspace/architecture/architecture.json`；已有唯一源原位复用，不自动迁移、覆盖或另建权威。Markdown 等既有权威的转换须先确认范围。入口保留实际路径与修订，`memory/current.md` 仍直接记录完整当前状态。
 
-每个范围一名 writer；计划与已确认现状在同源中分别标注，完成任务不等于计划已实现。长期源、必要证据和有效入口受清理保护，即使旧源仍在任务目录也不得因任务结束删除。HTML 仅为可重建的只读快照，可按需放 `.agent-workspace/architecture/views/` 或任务产物目录；删除、迁移和共享仍需相应授权。含项目数据的源和网页默认本地私有。
+每个范围一名 writer，现状与计划分别标注。源、入口与必要证据跨任务保留，旧任务目录中的有效源也受保护。HTML 是可重建的只读快照；可重建不等于获准删除。项目材料默认本地私有，迁移、清理和共享须有相应授权。完整位置、维护及交接规则见[规范源契约](references/source-contract.md#唯一来源与位置)，实际目录树见[示例与目录](references/examples.md#项目材料的默认目录)。
 
 - [选择架构与工作方式](references/workflow.md)
 - [机器源、状态、证据和渲染契约](references/source-contract.md)
