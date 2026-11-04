@@ -1,4 +1,55 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>流水线索引</title><!-- index-style --></head>
-<body><header class="topbar"><div class="brand"><span class="mark">◇</span><div><span class="eyebrow">LOCAL PIPELINE / OBSERVER</span><strong>流水线观察台</strong></div></div><div class="right"><span>本地只读视图</span><button id="theme" class="theme" aria-label="切换深浅色">◐ 深色</button></div></header>
-<main><div class="hero"><div><div class="eyebrow">PIPELINE INDEX</div><h1>流水线索引</h1><p>集中查看项目中的运行与已完成记录。</p></div><div class="stats"><div><span>活跃流水线</span><strong id="active-count">—</strong></div><div><span>已归档</span><strong id="archive-count">—</strong></div><div><span>等待处理</span><strong id="attention-count">—</strong></div></div></div><p class="notice" id="notice">读取本地索引中…</p><section class="panel"><div class="toolbar"><div class="tabs" role="tablist"><button class="tab active" data-tab="active" role="tab">活跃 <small></small></button><button class="tab" data-tab="archive" role="tab">已归档 / 过期 <small></small></button><button class="tab" data-tab="unknown" role="tab">读取失败 <small></small></button><button class="tab" data-tab="all" role="tab">全部 <small></small></button></div><input id="search" class="search" type="search" placeholder="搜索名称、项目或运行 ID" aria-label="搜索流水线"></div><div class="list-head"><span>流水线 / 运行 ID</span><span>项目 / 当前轮次</span><span>状态</span><span>最近更新</span><span></span></div><div id="list"></div><div class="foot" id="count"></div></section></main><!-- index-app --></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>流水线索引</title>
+  <!-- index-style -->
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至流水线索引</a>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">◇</span>
+      <div><span class="eyebrow">LOCAL PIPELINE / OBSERVER</span><strong>流水线观察台</strong></div>
+    </div>
+    <div class="right">
+      <span class="read-only">本地只读视图</span>
+      <button id="theme" class="theme" type="button" aria-label="切换深浅色" aria-pressed="false">◐ 深色</button>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <div class="hero">
+      <div class="hero-heading">
+        <div class="eyebrow">PIPELINE INDEX</div>
+        <h1>流水线索引</h1>
+        <p>集中查看项目中的运行与已完成记录。</p>
+      </div>
+      <div class="stats" aria-label="流水线概览">
+        <div><span>活跃流水线</span><strong id="active-count">—</strong></div>
+        <div><span>已归档</span><strong id="archive-count">—</strong></div>
+        <div><span>等待处理</span><strong id="attention-count">—</strong></div>
+      </div>
+    </div>
+    <p class="notice" id="notice" role="status">读取本地索引中…</p>
+    <section class="panel" aria-label="流水线记录">
+      <div class="toolbar">
+        <div class="tabs" role="tablist" aria-label="筛选流水线">
+          <button id="tab-active" class="tab active" data-tab="active" role="tab" type="button" aria-selected="true" aria-controls="results">活跃 <small></small></button>
+          <button id="tab-archive" class="tab" data-tab="archive" role="tab" type="button" aria-selected="false" aria-controls="results" tabindex="-1">已归档 / 过期 <small></small></button>
+          <button id="tab-unknown" class="tab" data-tab="unknown" role="tab" type="button" aria-selected="false" aria-controls="results" tabindex="-1">读取失败 <small></small></button>
+          <button id="tab-all" class="tab" data-tab="all" role="tab" type="button" aria-selected="false" aria-controls="results" tabindex="-1">全部 <small></small></button>
+        </div>
+        <label class="search-box"><span class="sr-only">搜索流水线</span><input id="search" class="search" type="search" placeholder="搜索名称、项目或运行 ID" aria-label="搜索流水线"></label>
+      </div>
+      <div id="results" role="tabpanel" aria-labelledby="tab-active" tabindex="0">
+        <div class="list-head" aria-hidden="true"><span>流水线 / 运行 ID</span><span>项目 / 当前轮次</span><span>状态</span><span>最近更新</span><span></span></div>
+        <div id="list"></div>
+        <div class="foot" id="count" role="status"></div>
+      </div>
+    </section>
+    <noscript><p class="notice">此本地只读视图需要 JavaScript 才能显示流水线索引。</p></noscript>
+  </main>
+  <!-- index-app -->
+</body>
+</html>

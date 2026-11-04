@@ -4,24 +4,29 @@
 
 ## 按项目和运行隔离
 
-每个项目使用自己的 .agent-workspace/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录；work-id 避开 memory、design、plans、work 及已有受管文件。项目固定入口为 .agent-workspace/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
+每个项目使用自己的 .agent-workspace/<work-id>/pipeline/，不同工作使用不同 work-id，不复用已经完成的目录；work-id 不得占用 memory、design、architecture、plans、work、runtime.md、index.html、pipeline-index-data.js、.pipeline-index.lock，即使对应路径尚未生成，也不得与其他已有受管路径冲突。按 Windows 路径语义比较保留名时不区分大小写，尾部点或空格形成的别名同样禁止，例如 INDEX.HTML、index.html.；不要通过这些变体绕过保留名。项目固定入口为 .agent-workspace/index.html；它是从该项目运行事件重建的只读索引，不是跨项目注册表。init 固定项目身份与随机 run_id，运行详情页校验两者；不使用 localStorage。相同名字的两个项目、相同 work-id 也不共用事件、锁或页面。此隔离是路径、数据与运行身份的隔离，不是操作系统权限沙箱。
+
+下图只列流水线 CLI 在相应操作中实际创建或更新的文件；不要求手工预建，也不表示 yomihime-init 会生成整棵树。
 
 ```text
 .agent-workspace/
-  index.html                     项目固定入口（事件派生的运行索引）
-  pipeline-index-data.js         由事件重建的索引数据
+  index.html                     工具生成：项目固定入口（事件派生的运行索引）
+  pipeline-index-data.js         工具生成：由事件重建的索引数据
+  .pipeline-index.lock           工具生成：项目索引跨进程锁文件，释放后仍留存
   <work-id>/pipeline/
-    events.jsonl                 唯一机器事件源
-    .pipeline.lock               跨进程读写锁
-    observer/
+    events.jsonl                 工具生成：持久的唯一机器事件源
+    .pipeline.lock               工具生成：运行读写锁文件，释放后仍留存
+    observer/                    工具生成：可重建的静态页面与资源
       index.html                 本次运行的观察页面
       app.js                     预制显示逻辑
       styles.css                 预制样式
       state.js                   事件派生数据，原子替换
-    report.html                  完成后自动生成，单文件最终报告
+    report.html                  工具生成：完成后保留的单文件最终报告
 ```
 
 这些实际运行材料和索引本地私有，按 multi-agent-engineering/project-memory 保护，不暂存、提交或上传。预制组件由工具复制，不要求 LLM 编写前端。各运行 events.jsonl 是事实来源，索引、页面和报告可重建，不是另一份人工项目记忆。
+
+保留事件日志、最终报告及项目索引入口；可重建不等于获准删除。`.pipeline-index.lock` 与 `.pipeline.lock` 是工具维护的锁文件，不是每次命令结束即删除的临时文件；文件存在不代表仍被占用，在用时禁止删除，也不作为普通残留清理。原子更新期间工具还会创建随机名 `.tmp` 文件并在正常退出路径中清理，不为它们约定固定文件名；异常中断后发现的残留先核对占用与用途，再按授权处理。
 
 ## 一次初始化，直接打开文件
 

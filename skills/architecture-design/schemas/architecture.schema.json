@@ -1,0 +1,876 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pouch.local/schemas/architecture-1.0.json",
+  "title": "Architecture design source 1.0",
+  "description": "Authoritative machine-readable architecture source. Semantic reference, scoped-view and evidence validation is also performed by render_architecture.py. HTML is only a derived read-only snapshot.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "revision": {
+      "$ref": "#/$defs/text"
+    },
+    "title": {
+      "$ref": "#/$defs/text"
+    },
+    "summary": {
+      "$ref": "#/$defs/text"
+    },
+    "architecture": {
+      "$ref": "#/$defs/architecture"
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/element"
+      },
+      "minItems": 1,
+      "maxItems": 2000
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationship"
+      },
+      "minItems": 0,
+      "maxItems": 2000
+    },
+    "contracts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/contract"
+      },
+      "minItems": 0,
+      "maxItems": 2000
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/flow"
+      },
+      "minItems": 0,
+      "maxItems": 2000
+    },
+    "views": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/view"
+      },
+      "minItems": 1,
+      "maxItems": 2000
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/change"
+      },
+      "minItems": 0,
+      "maxItems": 2000
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "revision",
+    "title",
+    "architecture",
+    "elements",
+    "relationships",
+    "contracts",
+    "flows",
+    "views"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}(?![\\s\\S])"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    },
+    "status": {
+      "enum": [
+        "current",
+        "planned",
+        "proposed",
+        "unknown"
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/text"
+        },
+        "lines": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*(?:-[1-9][0-9]*)?(?![\\s\\S])",
+          "maxLength": 21
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "architecture": {
+      "type": "object",
+      "properties": {
+        "style": {
+          "$ref": "#/$defs/text"
+        },
+        "rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/alternative"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "style",
+        "rationale"
+      ],
+      "additionalProperties": false
+    },
+    "alternative": {
+      "type": "object",
+      "properties": {
+        "style": {
+          "$ref": "#/$defs/text"
+        },
+        "reason": {
+          "$ref": "#/$defs/text"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "style",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "element": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "kind": {
+          "$ref": "#/$defs/text"
+        },
+        "parentId": {
+          "$ref": "#/$defs/id"
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 2000
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 2000
+        },
+        "contractIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        },
+        "drilldownViewId": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status",
+        "description",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "relationship": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "from": {
+          "$ref": "#/$defs/id"
+        },
+        "to": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "$ref": "#/$defs/text"
+        },
+        "kind": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "contractIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        },
+        "semantics": {
+          "$ref": "#/$defs/semantics"
+        }
+      },
+      "required": [
+        "id",
+        "from",
+        "to",
+        "label",
+        "kind",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "type": {
+          "$ref": "#/$defs/text"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 2000
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/text"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "recovery": {
+          "$ref": "#/$defs/text"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "code",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "example": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "input": {},
+        "output": {},
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "input",
+        "output"
+      ],
+      "additionalProperties": false
+    },
+    "stateTransition": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/text"
+        },
+        "to": {
+          "$ref": "#/$defs/text"
+        },
+        "trigger": {
+          "$ref": "#/$defs/text"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "trigger"
+      ],
+      "additionalProperties": false
+    },
+    "contract": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 2000
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "stateTransitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stateTransition"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status",
+        "description",
+        "inputs",
+        "outputs"
+      ],
+      "additionalProperties": false
+    },
+    "outcome": {
+      "enum": [
+        "normal",
+        "failure",
+        "recovery"
+      ]
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "elementId": {
+          "$ref": "#/$defs/id"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "contractIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "outcome": {
+          "$ref": "#/$defs/outcome"
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "elementId"
+      ],
+      "additionalProperties": false
+    },
+    "flowTransition": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/id"
+        },
+        "to": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "$ref": "#/$defs/text"
+        },
+        "condition": {
+          "$ref": "#/$defs/text"
+        },
+        "outcome": {
+          "$ref": "#/$defs/outcome"
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        },
+        "semantics": {
+          "$ref": "#/$defs/semantics"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "additionalProperties": false
+    },
+    "flow": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          },
+          "minItems": 1,
+          "maxItems": 2000
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/flowTransition"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status",
+        "description",
+        "steps",
+        "transitions"
+      ],
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "kind": {
+          "enum": [
+            "overview",
+            "module",
+            "flow"
+          ]
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000,
+          "minItems": 1
+        },
+        "relationshipIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "flowId": {
+          "$ref": "#/$defs/id"
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "focusElementId": {
+          "$ref": "#/$defs/id"
+        },
+        "contextElementIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "change": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 2000
+        },
+        "elementIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "contractIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "flowIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "uniqueItems": true,
+          "maxItems": 2000
+        },
+        "acceptance": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 2000
+        },
+        "decision": {
+          "enum": [
+            "draft",
+            "accepted",
+            "rejected"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "unverified",
+            "implemented",
+            "verified"
+          ]
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "progress": {
+          "$ref": "#/$defs/progress"
+        },
+        "progressEvidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "maxItems": 2000
+        },
+        "progressNote": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "progress": {
+      "enum": [
+        "completed",
+        "in_progress",
+        "incomplete",
+        "unknown"
+      ]
+    },
+    "semantics": {
+      "enum": [
+        "main",
+        "branch",
+        "async",
+        "return",
+        "error"
+      ]
+    }
+  }
+}

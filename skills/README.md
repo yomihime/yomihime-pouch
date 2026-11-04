@@ -8,6 +8,7 @@
 
 | 技能名称 | 用途 | 目录 |
 | :--- | :--- | :--- |
+| `architecture-design` | 选择架构形态，逐步形成有证据的可实施图纸。 | [architecture-design](./architecture-design/) |
 | `auto-style-string-resources` | 审计和改进用户可见文字及项目文案指南。 | [auto-style-string-resources](./auto-style-string-resources/) |
 | `interactive-planning-doc` | 把交互式讨论整理成可执行计划文档。 | [interactive-planning-doc](./interactive-planning-doc/) |
 | `development-pipeline` | 需求切片、顺序轮次与并行任务、检查点验收及实时观察。 | [development-pipeline](./development-pipeline/) |

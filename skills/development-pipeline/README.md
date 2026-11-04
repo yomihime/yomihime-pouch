@@ -6,7 +6,7 @@
 
 每个项目的 `.agent-workspace/index.html` 是固定入口，汇集活动运行和已完成或过期的历史运行，并链接到各运行的观察页或最终报告。运行详情按项目与运行隔离：规划时逐步显示流程，执行时读取相邻数据脚本，完成后停止刷新并生成单文件最终报告。索引和详情均由事件派生，显示上报事实而非进程存活证明。Python 标准库 CLI 记录事件并更新投影，默认无需服务、端口、前端构建或第三方依赖；它不代替 Agent 调度与实际测试。
 
-可与 multi-agent-engineering 的 task-handoff-v1、project-memory 的 knowledge-extract-v1 配合，也可由单 Agent 顺序执行。配套技能、子 Agent、目标环境和独立审查是否实际可用须如实说明。
+可与 multi-agent-engineering 的 task-handoff-v1、project-memory 的 knowledge-extract-v1 配合，也可由单 Agent 顺序执行。架构变化可按需使用 `architecture-design`，把必要视图、契约和验证证据关联到已有切片与检查点；小任务不强制完整架构阶段，缺少配套技能时按现有证据有界分析。配套技能、子 Agent、目标环境和独立审查是否实际可用须如实说明。跨任务图纸复用既有唯一源；无源时按需使用 `.agent-workspace/architecture/`，从稳定项目入口引用并交接修订与 owner，不随运行清理或复制到另一份 project-memory 图源。
 
 ```text
 使用 $development-pipeline，将这个功能拆成可验收切片。

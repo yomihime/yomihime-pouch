@@ -12,12 +12,14 @@
   function isStale(r) { return !r.error && r.status !== 'completed' && kind(r) === 'archive'; }
   function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function render() {
+    document.querySelectorAll('.tab').forEach(b => { b.classList.toggle('active', b.dataset.tab === tab); b.setAttribute('aria-selected', String(b.dataset.tab === tab)); b.tabIndex = b.dataset.tab === tab ? 0 : -1; });
+    $('#results').setAttribute('aria-labelledby', 'tab-' + tab);
     if (!data) return;
     const runs = data.runs.slice().sort((a,b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
     const active = runs.filter(r => kind(r) === 'active').length, archived = runs.filter(r => kind(r) === 'archive').length, unknown = runs.filter(r => kind(r) === 'unknown').length;
     $('#active-count').textContent = active; $('#archive-count').textContent = archived;
     $('#attention-count').textContent = runs.filter(r => r.error || ['needs_decision','consulting','blocked'].includes(r.status)).length;
-    document.querySelectorAll('.tab').forEach(b => { b.classList.toggle('active', b.dataset.tab === tab); b.setAttribute('aria-selected', String(b.dataset.tab === tab)); b.querySelector('small').textContent = b.dataset.tab === 'active' ? active : b.dataset.tab === 'archive' ? archived : b.dataset.tab === 'unknown' ? unknown : runs.length; });
+    document.querySelectorAll('.tab').forEach(b => { b.querySelector('small').textContent = b.dataset.tab === 'active' ? active : b.dataset.tab === 'archive' ? archived : b.dataset.tab === 'unknown' ? unknown : runs.length; });
     $('#notice').textContent = (failed ? '本地索引读取失败，显示的是上次成功加载的数据。' : '索引生成于 ' + new Date(data.generated_at).toLocaleString() + '。') + ' 状态来自事件记录，不探测进程；7 天无新事件的未完成运行标为过期。' + (unknown ? ' 有 ' + unknown + ' 条日志读取失败，请查看“读取失败”。' : '');
     const q = $('#search').value.trim().toLocaleLowerCase();
     const rows = runs.filter(r => (tab === 'all' || kind(r) === tab) && [r.title,r.run_id,r.project,r.round,r.path,r.status,r.error].join(' ').toLocaleLowerCase().includes(q));
@@ -41,7 +43,15 @@
   window.pipelineIndexReceive = value => { if (!value || !Array.isArray(value.runs)) return; data = value; failed = false; render(); };
   function refresh() { const old = document.getElementById('index-data'); if (old) old.remove(); const script = document.createElement('script'); script.id = 'index-data'; script.src = './pipeline-index-data.js?t=' + Date.now(); script.onerror = () => { failed = true; if (data) render(); else $('#notice').textContent = '无法读取本地索引数据。请运行 index 命令重新生成。'; }; document.body.append(script); }
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; render(); }));
+  $('.tabs').addEventListener('keydown', event => {
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const current = tabs.indexOf(event.target);
+    if (current < 0 || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[next].click(); tabs[next].focus();
+  });
   $('#search').addEventListener('input', render);
-  $('#theme').addEventListener('click', () => { document.body.classList.toggle('dark'); $('#theme').textContent = document.body.classList.contains('dark') ? '☀ 浅色' : '◐ 深色'; });
+  $('#theme').addEventListener('click', () => { document.body.classList.toggle('dark'); const dark = document.body.classList.contains('dark'); $('#theme').textContent = dark ? '☀ 浅色' : '◐ 深色'; $('#theme').setAttribute('aria-pressed', String(dark)); });
   refresh(); setInterval(refresh, 5000);
 })();

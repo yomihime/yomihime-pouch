@@ -54,6 +54,14 @@ class ProjectIndexTests(unittest.TestCase):
             pipeline.mutate(run, kind, entity_id=entity, status="running")
             pipeline.mutate(run, kind, entity_id=entity, status="passed", candidate="v1", evidence_paths=[str(self.evidence)])
 
+    def test_links_use_the_theme_local_color_token(self):
+        # An alias resolved on :root would retain the light color when body.dark
+        # overrides --green. This source guard is not a browser rendering test.
+        css = (SCRIPT.parents[1] / "assets" / "index" / "styles.css").read_text(encoding="utf-8")
+        self.assertIn("a { color: var(--green);", css)
+        self.assertNotIn("var(--teal)", css)
+        self.assertIn("--green: #9bcfa8;", css)
+
     def test_multiple_runs_lifecycle_and_local_links(self):
         active = self.init("active", "Active work", demo=False)
         finished = self.init("finished", "Completed work")
@@ -171,6 +179,7 @@ class ProjectIndexTests(unittest.TestCase):
             "init-20261103/init/staging/template/pipeline/events.jsonl",
             "memory/pipeline/events.jsonl",
             "design/pipeline/events.jsonl",
+            "architecture/pipeline/events.jsonl",
             "plans/pipeline/events.jsonl",
             "work/pipeline/events.jsonl",
             "current/scratch/pipeline/events.jsonl",
@@ -189,9 +198,34 @@ class ProjectIndexTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), journal)
             self.assertFalse((path.parent / ".pipeline.lock").exists(), relative)
 
+    def test_persistent_architecture_is_preserved_without_hiding_similar_work_ids(self):
+        run = self.init("architecture-refresh", "Refresh architecture")
+        architecture = self.work / "architecture"
+        materials = {
+            "architecture.json": '{"schemaVersion":"1.0","revision":"current"}\n',
+            "index.html": "User-owned architecture viewer",
+            "modules/orders.json": '{"id":"orders"}\n',
+            "pipeline/events.jsonl": "not a pipeline journal; reserved design material\n",
+        }
+        for relative, content in materials.items():
+            path = architecture / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        before = {path.relative_to(architecture): path.read_bytes()
+                  for path in architecture.rglob("*") if path.is_file()}
+        journal = (run / "events.jsonl").read_bytes()
+        pipeline.build_index(self.work)
+        self.assertIn("architecture", pipeline.WORKSPACE_RESERVED_DIRS)
+        self.assertEqual(set(self.entries()), {"architecture-refresh/pipeline"})
+        self.assertEqual((run / "events.jsonl").read_bytes(), journal)
+        after = {path.relative_to(architecture): path.read_bytes()
+                 for path in architecture.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+        self.assertFalse((architecture / "pipeline" / ".pipeline.lock").exists())
+
     def test_explicit_noncanonical_workspace_run_keeps_its_own_views(self):
         canonical = self.init("canonical")
-        for relative in ("custom-run", "other/deep/pipeline", "memory/pipeline"):
+        for relative in ("custom-run", "other/deep/pipeline", "memory/pipeline", "architecture/pipeline"):
             with self.subTest(path=relative):
                 run = self.work / relative
                 pipeline.mutate(run, "init", title=relative, demo=True)
@@ -203,6 +237,126 @@ class ProjectIndexTests(unittest.TestCase):
                 self.assertEqual((run / "events.jsonl").read_bytes(), before)
                 self.assertEqual(set(self.entries()), {"canonical/pipeline"})
         self.assertEqual(self.entries()["canonical/pipeline"]["run_id"], pipeline.read_state(canonical)["run_id"])
+
+    def test_new_init_rejects_fixed_root_file_names_before_any_write(self):
+        names = sorted(pipeline.WORKSPACE_RESERVED_FILES)
+        for name in names:
+            for alias in (name, name.upper(), name + ". "):
+                for suffix in ((), ("pipeline",), ("nested", ".agent-workspace", "work-id", "pipeline")):
+                    with self.subTest(name=alias, suffix=suffix):
+                        run = self.work / alias
+                        for component in suffix:
+                            run /= component
+                        with self.assertRaisesRegex(pipeline.PipelineError, "reserved workspace root file name"):
+                            pipeline.mutate(run, "init", title="must not create", demo=True, project_root=self.project)
+                        self.assertFalse(self.work.exists(), "rejected init must not create even the workspace")
+        uppercase_workspace = self.project / ".AGENT-WORKSPACE" / "INDEX.HTML" / "pipeline"
+        with self.assertRaisesRegex(pipeline.PipelineError, "reserved workspace root file name"):
+            pipeline.mutate(uppercase_workspace, "init", title="portable alias", demo=True)
+        self.assertFalse(uppercase_workspace.parent.parent.exists())
+
+    @unittest.skipUnless(hasattr(os, "symlink"), "symlinks unavailable")
+    def test_symlink_parent_traversal_cannot_hide_actual_reserved_slot(self):
+        anchor = self.work / "anchor"
+        anchor.mkdir(parents=True)
+        alias = self.project / "alias"
+        try:
+            alias.symlink_to(anchor, target_is_directory=True)
+        except OSError as error:
+            self.skipTest("symlink creation unavailable: " + str(error))
+        for name in pipeline.WORKSPACE_RESERVED_FILES:
+            run = alias / ".." / name / "pipeline"
+            self.assertEqual(run.resolve(), self.work / name / "pipeline")
+            with self.assertRaisesRegex(pipeline.PipelineError, "reserved workspace root file name"):
+                pipeline.mutate(run, "init", title="actual path collision", demo=True)
+            self.assertFalse((self.work / name).exists())
+        self.assertEqual(list(self.work.iterdir()), [anchor])
+        self.assertEqual(list(anchor.iterdir()), [])
+        self.assertFalse(list(self.project.rglob("events.jsonl")))
+
+    def test_fixed_root_file_contents_survive_rejected_init(self):
+        self.work.mkdir()
+        for name in pipeline.WORKSPACE_RESERVED_FILES:
+            (self.work / name).write_bytes(("User-owned " + name).encode())
+        before = {path.name: path.read_bytes() for path in self.work.iterdir()}
+        for name in pipeline.WORKSPACE_RESERVED_FILES:
+            with self.assertRaisesRegex(pipeline.PipelineError, "reserved workspace root file name"):
+                pipeline.mutate(self.work / name / "pipeline", "init", title="collision", demo=True)
+        self.assertEqual({path.name: path.read_bytes() for path in self.work.iterdir()}, before)
+        self.assertFalse(list(self.work.rglob("events.jsonl")))
+
+    def test_cli_rejects_root_filename_alias_without_committing_event(self):
+        for name in ("INDEX.HTML", "PIPELINE-INDEX-DATA.JS", "Runtime.MD. ", ".PIPELINE-INDEX.LOCK"):
+            result = subprocess.run([sys.executable, str(SCRIPT), "init", str(self.work / name / "pipeline"), "--title", "Reserved name", "--demo"], capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 2, result.stdout)
+            self.assertIn("reserved workspace root file name", result.stderr)
+            self.assertEqual(result.stdout, "")
+            self.assertFalse(self.work.exists())
+
+    def test_case_insensitive_reserved_directories_stay_out_of_index(self):
+        run = self.init("valid")
+        journal = (run / "events.jsonl").read_bytes()
+        for name in ("MEMORY", "Design", "ARCHITECTURE", "PLANS", "Work", ".AGENT-WORKSPACE"):
+            target = self.work / name / "pipeline" / "events.jsonl"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(journal)
+        pipeline.build_index(self.work)
+        self.assertEqual(set(self.entries()), {"valid/pipeline"})
+        for name in ("MEMORY", "Design", "ARCHITECTURE", "PLANS", "Work", ".AGENT-WORKSPACE"):
+            self.assertEqual((self.work / name / "pipeline" / "events.jsonl").read_bytes(), journal)
+            self.assertFalse((self.work / name / "pipeline" / ".pipeline.lock").exists())
+
+    def test_similar_work_ids_and_deeper_or_external_custom_paths_remain_valid(self):
+        for name in ("index.html-preview", "runtime.md-next", "pipeline-index-data.js-task", ".pipeline-index.lock-audit"):
+            self.init(name)
+        expected = {name + "/pipeline" for name in ("index.html-preview", "runtime.md-next", "pipeline-index-data.js-task", ".pipeline-index.lock-audit")}
+        self.assertEqual(set(self.entries()), expected)
+        for name in pipeline.WORKSPACE_RESERVED_FILES:
+            for root in (self.project / "custom", self.work / "legitimate-work" / "scratch"):
+                run = root / name / "pipeline"
+                pipeline.mutate(run, "init", title="Explicit custom path", demo=True, project_root=self.project)
+                pipeline.mutate(run, "note", entity_id=pipeline.read_state(run)["run_id"], note="still usable")
+                self.assertEqual(pipeline.read_state(run)["revision"], 2)
+                self.assertTrue(pipeline.build_observer(run).is_file())
+        self.assertEqual(set(self.entries()), expected)
+
+    def test_historical_fixed_slot_runs_keep_explicit_commands_without_auto_index(self):
+        source = self.project / "historical-source" / "pipeline"
+        pipeline.mutate(source, "init", title="Preserve historical journal", demo=True, project_root=self.project)
+        journal = (source / "events.jsonl").read_bytes()
+        for index, name in enumerate(sorted(pipeline.WORKSPACE_RESERVED_FILES)):
+            workspace = self.project / ("history-" + str(index)) / ".agent-workspace"
+            run = workspace / name / "pipeline"
+            run.mkdir(parents=True)
+            (run / "events.jsonl").write_bytes(journal)
+            state = pipeline.read_state(run)
+            self.assertEqual(state["revision"], 1)
+            self.assertTrue(pipeline.build_observer(run).is_file())
+            self.assertEqual((run / "events.jsonl").read_bytes(), journal)
+            self.assertIsNone(pipeline.rebuild_enclosing_index(run))
+            pipeline.mutate(run, "note", entity_id=state["run_id"], note="Explicit historical command")
+            self.assertEqual(pipeline.read_state(run)["revision"], 2)
+            self.assertEqual((run / "events.jsonl").read_bytes().splitlines()[0] + b"\n", journal)
+            before = {path.relative_to(workspace): path.read_bytes() for path in workspace.rglob("*") if path.is_file()}
+            with self.assertRaisesRegex(pipeline.PipelineError, "root file is occupied by a directory"):
+                pipeline.build_index(workspace)
+            after = {path.relative_to(workspace): path.read_bytes() for path in workspace.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+            self.assertTrue((workspace / name).is_dir())
+            for other in pipeline.WORKSPACE_RESERVED_FILES - {name}:
+                self.assertFalse((workspace / other).exists())
+
+    def test_explicit_index_rejects_aliased_root_directories_before_locking(self):
+        for index, name in enumerate(sorted(pipeline.WORKSPACE_RESERVED_FILES)):
+            workspace = self.project / ("conflict-" + str(index)) / ".agent-workspace"
+            collision = workspace / name.upper()
+            collision.mkdir(parents=True)
+            (collision / "keep.txt").write_text("Do not remove or rewrite", encoding="utf-8")
+            before = {path.relative_to(workspace): path.read_bytes() for path in workspace.rglob("*") if path.is_file()}
+            with self.assertRaisesRegex(pipeline.PipelineError, "root file is occupied by a directory"):
+                pipeline.build_index(workspace)
+            self.assertEqual({path.relative_to(workspace): path.read_bytes() for path in workspace.rglob("*") if path.is_file()}, before)
+            self.assertEqual(len(list(workspace.iterdir())), 1)
 
     def test_relocated_journal_preserves_history_without_rewriting_paths(self):
         source = self.project / "import-source" / "pipeline"
