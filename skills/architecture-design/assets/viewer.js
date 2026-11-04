@@ -374,7 +374,7 @@
     detailsHeader(item, `${kindLabels[item.kind] || item.kind || '构件'} / ELEMENT`);
     const nested = drillTarget(item);
     if (nested) append(detail, button(`展开内部结构 · ${nested.name}`, 'detail-link drill-detail', () => drillInto(item)));
-    if (array(currentView.contextElementIds).includes(item.id)) append(detail, dom('p', 'warning-note', '外部上下文：仅展示此边界的协作关系，不代表本模块拥有该构件。')); 
+    if (array(currentView.contextElementIds).includes(item.id)) append(detail, dom('p', 'warning-note', '外部上下文：仅展示此边界的协作关系，不代表本模块拥有该构件。'));
     if (item.parentId) {
       const parent = elements.get(item.parentId);
       if (parent) detailLink(section('所属边界 / PARENT'), parent.name, parent.id, () => select({ type: 'element', item: parent }));

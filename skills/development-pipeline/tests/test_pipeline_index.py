@@ -54,6 +54,14 @@ class ProjectIndexTests(unittest.TestCase):
             pipeline.mutate(run, kind, entity_id=entity, status="running")
             pipeline.mutate(run, kind, entity_id=entity, status="passed", candidate="v1", evidence_paths=[str(self.evidence)])
 
+    def test_links_use_the_theme_local_color_token(self):
+        # An alias resolved on :root would retain the light color when body.dark
+        # overrides --green. This source guard is not a browser rendering test.
+        css = (SCRIPT.parents[1] / "assets" / "index" / "styles.css").read_text(encoding="utf-8")
+        self.assertIn("a { color: var(--green);", css)
+        self.assertNotIn("var(--teal)", css)
+        self.assertIn("--green: #9bcfa8;", css)
+
     def test_multiple_runs_lifecycle_and_local_links(self):
         active = self.init("active", "Active work", demo=False)
         finished = self.init("finished", "Completed work")
