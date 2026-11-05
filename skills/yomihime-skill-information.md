@@ -11,7 +11,7 @@
 | [architecture-design](./architecture-design/SKILL.md) | 梳理架构、边界、契约与有证据的图纸 | 不把目标设计或动画当成已实现事实 |
 | [auto-style-string-resources](./auto-style-string-resources/SKILL.md) | 审计用户可见字串和文案指南，保留机器约束 | 结构检查不能证明文案语义或自然度 |
 | [development-pipeline](./development-pipeline/SKILL.md) | 按依赖组织轮次、实现切片、检查点和证据 | 上报状态不等于独立验证，也不授权发布 |
-| [interactive-planning-doc](./interactive-planning-doc/SKILL.md) | 通过讨论形成可执行工程计划 | docs-only 阶段不擅自实施 |
+| [interactive-planning-doc](./interactive-planning-doc/SKILL.md) | 前置调查与关键澄清，形成完整可交接主计划 | 完整草稿不代表全部就绪或获准实施 |
 | [multi-agent-engineering](./multi-agent-engineering/SKILL.md) | 分工、单一写入权、交接和独立审查 | 没有调度工具时不虚构独立 Agent |
 | [project-memory](./project-memory/SKILL.md) | 保存当前状态与恢复必需上下文 | 只读检查不自动改写记忆或项目文件 |
 | [ui-design](./ui-design/SKILL.md) | 复用界面规范，设计并验证可访问性 | 截图或 DOM 检查不等于端到端验证 |
@@ -71,9 +71,64 @@ skills/
 ### 真实运行要求
 
 - 架构渲染与流水线 helper：Python 3.9+，仅标准库。字串完整扫描：Python 3.8+，仅标准库。这是代码/API 下限核对，不是最低版本实机测试证明。
-- 修复前候选在 Linux x86_64、Python 3.12.14 和 3.13.5 上的 18 次 CLI 烟测全部通过；本次回归使用 Python 3.12。Python 3.8/3.9、macOS、原生 Windows 尚未实测；具体平台限制见各技能文档。
+- 历史候选在 Linux x86_64、Python 3.12.14 和 3.13.5 上的 18 次 CLI 烟测全部通过；历史回归使用 Python 3.12。本轮原生 Windows 的部分通过、失败与跳过见下文，不据此承诺完整平台支持。Python 3.8/3.9 与 macOS 仍未实测。
 - planning、multi-agent、memory、UI 四个技能是文档指导，使用时不需要 Python。init 的指导可独立使用；可选 helper 使用 Python 3.10+ 标准库。纯版本值比较不依赖 POSIX，也不读取目录或给出安装决定；完整目录检查另需 POSIX no-follow 文件描述符能力。原生 Windows 的目录检查明确退出码 2、需人工或宿主工具核验，不使用不安全回退；原生 Windows、macOS 与 Python 3.10 最低版本均未实测。浏览器交互需 JavaScript；Node DOM 测试为可选开发验证，不是用户使用文档技能的先决条件。
 - 测试子进程使用最小环境与超时。浏览器测试默认显式启用 Chromium sandbox；只有明确声明的隔离 Linux 容器测试才有受控例外，启动失败不自动降级。
+
+## 规划与交接语义移植及本机复核（2026-11-05）
+
+本轮以 main `885a9cfb3556a9b936fa4c7f061f97e8a1bb1689` 为基准，将本地 `ccc91dccf3d609580d7d8b418a149c4b86784ed1` 中尚未等价合入的语义整理为候选 **`d6804e40f155a3b1d5b6e009af5f031ee95d2abd`**。下述结果只适用于该候选的技能内容；随后对本 information 文件的汇总编辑不改变技能目录。仍为未发布的 `1.0.0` 候选，四个受影响技能已刷新实际 `updated_at`，planning 中英文元数据一致。
+
+### 内容与验证边界
+
+规划流程现在强调：前置调查、必要的集中关键澄清、尽早形成完整主计划、检查交接条件。AI 自行核实工程事实与普通技术方案；已有完整计划的纯执行、小修复和单点问答仍可跳过规划。完整首稿不代表所有部分就绪或获准实施，不逐章审批，已有实施授权沿用；核心未决只阻止依赖范围，不能绕过既有轮次或失败屏障。
+
+新增的 [计划模板](./interactive-planning-doc/assets/plan-template.md) 由 AI 填写与裁剪。流水线、任务交接和项目记忆引用同一主计划路径、修订和相关章节，后续变化先更新受影响计划再同步任务输入及证据。观察器逐步绘图与完整主计划独立；拓扑变化接续独立 run，保留旧状态。当前 `.agent-workspace/`、长期架构源、作者、权限和私有材料保护继续有效。
+
+所有源码工作在原主 checkout 的新分支完成，没有复制仓库或额外 worktree；保留 `preserve/local-main-ccc91dc-20261105` 及原有未跟踪材料。一个新上下文审查者只读核对双语、模板、跨技能约定及已有授权、核心未决、小修复、在途修订四类情境，未发现 Blocker/Important。此为语义审查和情境推演，不是模型行为对照试验。
+
+### 本机回归
+
+环境为原生 Windows、Python **3.13.9**、Node **24.21.0**。先完整运行现有 Python suite **209 项**，再对新增三项文档契约运行最终 planning suite **10/10**。按最终各 suite 去重汇总为 **212 项：179 通过、3 失败、2 错误、28 跳过**；三套 Node DOM 检查通过。八个技能的 `quick_validate.py` 均通过；首次使用系统默认 GBK 时读取 UTF-8 失败，使用 Python 标准 `-X utf8` 后全部通过，未修改验证器。仓库级元数据、安装内引用和旧路径约束检查通过。
+
+五个失败/错误出现在本轮未修改的实现和测试中：文案扫描三项路径断言收到 Windows 反斜杠；其环境白名单测试因 `SystemRoot` 大小写抛出 KeyError；流水线索引测试尝试创建含 `?`、`<`、`>` 的目录，触发 WinError 123。本轮不更改这些跨平台行为或放松断言，原始失败保留。跳过主要涉及 POSIX/no-follow、符号链接或可选浏览器能力。因此不能宣布全仓测试通过或完整 Windows 支持；DOM 检查也不证明浏览器布局、CSP 或端到端行为。
+
+### Alibaba skill-up / skill-upper
+
+使用官方 **skill-up 0.14.0 Windows amd64** 发布包并核对官方 SHA-256 校验和；按同版本 `skill-upper` 说明，为 planning、pipeline、multi-agent 和 memory 准备 **10 个案例**：完整首稿、核心取舍、已有授权、小修例外、草稿与同意、主计划与轮次、拓扑修订、任务包、记忆状态和定点更新。
+
+初次配置验证指出 `agent_judge` 缺少 `judge.model`；仅修正评估配置，保留原日志。修正后 `validate` 加载 10 项通过，`list-cases` 与 `run --dry-run` 通过。配置为 OpenCode、百炼 **qwen-flash**，语义 judge 显式配置同一提供者/模型；没有使用本机默认模型替代百炼，也未运行无 skill 对照。
+
+本机未发现已注入的百炼/OpenAI API 环境认证，按本轮边界没有读取凭据文件、私有会话或从云端转移 Network secret。**真实 agent/judge 执行、原版与候选行为比较、基于执行失败的 skill-upper 迭代均为 unrun**；本轮只完成案例、配置诊断修正、离线预检和独立语义审查。没有通过率、提升率或推理成绩，不能沿用历史结果作为本轮通过证明。
+
+### NVIDIA 静态检查与 Tier 3 条件
+
+使用 PyPI **SkillEvaluator 0.7.2**，external profile、默认 quality 配置、门槛 **70**、`--no-llm`，对八个技能分别运行完整 Tier 1 命令，生成 JSON/HTML。第一轮 Bandit/Gitleaks 缺失；在仓库外临时环境补齐 **Bandit 1.9.4**、**Gitleaks 8.30.0**（核对官方校验和）后，以同一冻结内容重跑八项，保留两轮报告，不跳过检查或修改规则。最终如下：
+
+| 技能 | QUALITY | 完整 Tier 1 |
+| --- | ---: | --- |
+| architecture-design | 86.5 | incomplete |
+| auto-style-string-resources | 93.5 | failed |
+| development-pipeline | 88.2 | failed |
+| interactive-planning-doc | 86.5 | failed |
+| multi-agent-engineering | 89.0 | incomplete |
+| project-memory | 85.0 | incomplete |
+| ui-design | 86.5 | incomplete |
+| yomihime-init | 83.8 | failed |
+
+最终 **4 incomplete / 4 failed**；八项 QUALITY 超过 70，但不能称整体或安全门禁通过。八项 Bandit 与 Gitleaks 检查通过，SkillSpector **2.13.3** 仍报告 partial。文案的 E2/AR2 命中对应环境白名单测试及测试能力限制；planning 的 PII 命中保留的真实作者邮箱；init 的 TM1/SC2 对应明确禁止危险命令的规则。按实际状态保留，未删除规则、邮箱或测试以换 PASS。
+
+流水线另命中本机已有的空 `scripts/__pycache__/`、`tests/__pycache__/` 目录（SC8）：其创建时间为 2026-10-30、最后修改 2026-10-31，早于本轮。遵守保留用户未跟踪材料的要求，没有清理它们；报告反映实际 checkout，不能把该命中归为本次新增源码或完整分发扫描已通过。QUALITY 为启发式信号，中文触发描述、外链示例及单一 `metadata.version` 可能与英文规则偏好不同，不为分数增设重复版本或虚假接口。 planning 本轮为 86.5；报告扣分项包括未识别示例、WHEN/Purpose、错误处理/验证、前置条件和限制等英文锚点，以及根级 version。相关中文边界与外置模板实际存在，不能据此推断行为退化，也不补重复英文段落换分。
+
+**Tier 2 与技能间 embedding 比较未运行**，原因同上。官方 Tier 3 `doctor` 已实际执行，因缺少 Harbor 模块而退出 1；本机也未提供 Docker 命令。没有改写 HOME、放宽权限或替换官方运行路径。Tier 3 agent/verifier 两臂均未启动，**scored attempts=0**，分数、触发确认和 lift 均不可用；这是预检失败，不是完成了一次双臂评估。
+
+### 用量、证据与后续
+
+本轮上述评估器实际推理调用 **0**，聊天输入/输出、embedding token 均 **0**；配置中的 qwen-flash 没有成为实际执行模型。该计数不包含本次 Codex 编辑与独立审查，宿主未提供它们可单列的模型/用量；不能据此宣称整个任务费用为零。
+
+原始报告、案例、配置失败与修正日志、目录内容指纹和审查回执保留在执行本机的仓库外目录 `C:/Users/eveni/AppData/Local/Temp/codex-planning-port-20261105-0130/`，不随 PR 发布。`frozen-skills.json` 记录按相对路径排序的非缓存文件 SHA-256 清单，扫描前后逐文件复核未变；NVIDIA JSON 另保留自身 source-tree/2 摘要与覆盖状态。没有发布用户材料或秘密。
+
+后续在获准且能安全注入百炼认证的环境执行同一 suite 的原版/候选比较和完整相关回归，再执行 NVIDIA Tier 2；Tier 3 还需受支持的 Harbor、容器运行时和模型路径。当前只交付可审阅候选与真实验证记录，PR 保持 draft，不合并或发布。
 
 ## 解析边界修复与回归（2026-11-05）
 
