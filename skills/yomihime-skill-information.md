@@ -75,6 +75,31 @@ skills/
 - planning、multi-agent、memory、UI 四个技能是文档指导，使用时不需要 Python。init 的指导可独立使用；可选 helper 使用 Python 3.10+ 标准库。纯版本值比较不依赖 POSIX，也不读取目录或给出安装决定；完整目录检查另需 POSIX no-follow 文件描述符能力。原生 Windows 的目录检查明确退出码 2、需人工或宿主工具核验，不使用不安全回退；原生 Windows、macOS 与 Python 3.10 最低版本均未实测。浏览器交互需 JavaScript；Node DOM 测试为可选开发验证，不是用户使用文档技能的先决条件。
 - 测试子进程使用最小环境与超时。浏览器测试默认显式启用 Chromium sandbox；只有明确声明的隔离 Linux 容器测试才有受控例外，启动失败不自动降级。
 
+## NVIDIA 云端最终评测记录（2026-11-05，c0d659d）
+
+本节按云端提供的最终执行汇总记录，未在本机重放模型或评测。受测 PR head 为 **`c0d659dd5c481ef91134f092b20de7a9768e8728`**；云端确认下列五个技能的完整目录与 `7ca88d09fba15502ea338e25676622f1350d81f6` 一致。本次提交只更新 information，不改变技能源码。此前“最新候选 NVIDIA 未重跑”是当时冻结状态，由本节补充后续实际结果；各历史输入版本和原始失败继续保留。
+
+工具身份：**SkillEvaluator 0.7.2 / `f878f99`**；聊天模型 **`qwen3.7-plus`**，embedding 模型 **`text-embedding-v4`**。QUALITY 静态质量分、LLM rubric、各 Tier 检查是不同证据，不能互换或汇总成技能整体通过率。
+
+| 技能 | QUALITY | LLM rubric | Tier 1 原始/所选检查状态 | Tier 2 |
+| --- | ---: | --- | --- | --- |
+| interactive-planning-doc | 86.5 | 90.9 | 原报告 incomplete；首例 Gitleaks 路径问题，独立无模型补充检查通过 | failed，3 HIGH（涉及中英文镜像） |
+| development-pipeline | 88.2 | 无分数：调用前拒绝 | failed | passed |
+| multi-agent-engineering | 89.0 | 无分数：调用前拒绝 | failed | passed |
+| project-memory | 85.0 | 无分数：调用前拒绝 | failed | passed |
+| auto-style-string-resources | 93.5 | 94.1 | 所选检查 passed；完整 Tier 1 未覆盖 | passed |
+
+覆盖范围与限制：
+
+- **全部五个技能的 Tier 1 都跳过了无法安装的 SkillSpector，且缺少 Semgrep**，因此没有任何一项可称“完整 Tier 1 passed”。strings 的 passed 只指所选检查；planning 的补充 Gitleaks 检查通过不覆写原 incomplete，也不补足其余缺失扫描。
+- pipeline、multi-agent、memory 的关联 Markdown 超过官方 **3000 字节限制**，三个 rubric 在模型调用前拒绝，**不是零分**，也没有可比较的 rubric 成绩。QUALITY 分数不能填补 rubric 缺失。
+- Tier 2 同时建立了五技能 metadata catalog；这是该层的评测上下文，不等于五个技能的实际 Agent 交接或端到端实现已运行。planning 保留 failed / 3 HIGH，其余四项保留 passed，不据此修改技能或推断所有风险已排除。原始 metadata catalog、提示和逐例回答不随 PR 发布。
+- **Tier 3 未运行**：因已知 state 目录只读，本轮未重试；未运行独立 Harbor，没有双臂对照成绩或 lift。没有通过更改权限或安全配置绕过限制。
+
+本轮云端 **47 个请求成功，零重试**：聊天 **18 次，输入 35,072 / 输出 3,714 token**；embedding **29 次，输入 52,737 token**。不虚构 embedding 输出 token，不将聊天与 embedding 合成同价费用，费用以账单为准。这组用量仅属于本轮 NVIDIA，和下节 11 请求的文本对照分开记录，不能相互替代或重复计数。本机本轮新增模型调用为 0，未读取或转移凭据。
+
+Windows 索引并发读取故障仍保留下节结论：main 亦可复现，但真实失败瞬间的共享句柄与最终机制尚待确认；本轮没有修复该问题，也没有重跑完整 Windows 回归。上述云端结果不能替代此项验收。PR 保持 draft，不合并；本轮不触及此前被拒绝写入的 artifacts.md。
+
 ## Qwen3.7-Plus 云端对照与判定澄清（2026-11-05，27b9211）
 
 云端以 **`qwen3.7-plus`** 显式加载技能文档，比较基准 **`f3197376db3ab09309671a7f71a48f02d28b4b62`** 与候选 **`27b92116c809a34f89b7e53d829ae4e597e0c7d0`**；受测技能内容与 `7ca88d09fba15502ea338e25676622f1350d81f6` 字节相同。以下记录云端提供的两轮执行汇总；本机没有重放模型 API 或读取、转移百炼 key。本次 information 更新不改变受测技能内容。
@@ -117,7 +142,7 @@ skills/
 
 ### NVIDIA 与证据身份
 
-最新候选的 NVIDIA **未重跑**；之前报告对应基准 `f319737` 的技能内容，各历史分轮的实际输入版本与限制仍见原节，不能当作 `27b9211` 或本次 information-only head 的新报告。**Tier 3 未完成**，没有新增真实双臂成绩或 lift。云端文本对照不能替代真实 Agent 交接、NVIDIA 各层或 Windows 并发验收。
+本节冻结时，最新候选的 NVIDIA **尚未重跑**；此前报告对应基准 `f319737` 的技能内容，各历史分轮的实际输入版本与限制仍见原节，不能当作 `27b9211` 的新报告。后续针对 `c0d659d` 的云端结果见上方最终评测节。**Tier 3 仍未完成**，没有真实双臂成绩或 lift。云端文本对照不能替代真实 Agent 交接、NVIDIA 各层或 Windows 并发验收。
 
 本机约束复核和定向契约证据位于仓库外 `C:/Users/eveni/AppData/Local/Temp/codex-planning-port-20261105-0130/cloud-eval-information-update/`，只读并发对照及受控实验位于同级 `concurrency-readonly-diagnosis/`。本节不发布私有提示、逐例回答、凭据或用户协作材料；PR 保持 draft，不合并或发布。
 
