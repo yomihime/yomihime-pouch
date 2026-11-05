@@ -164,7 +164,7 @@ def collect_i18n(root: Path, locales: set[str] | None, report: ScanReport) -> li
                     group=group,
                     key=f"{locale}:{key}",
                     text=text,
-                    source=str(path.relative_to(root)),
+                    source=path.relative_to(root).as_posix(),
                     tags=("i18n", locale),
                 )
             )
@@ -222,7 +222,7 @@ class VisibleStringVisitor(ast.NodeVisitor):
                 group=group,
                 key=f"L{getattr(node, 'lineno', '?')}",
                 text=text,
-                source=str(rel),
+                source=rel.as_posix(),
                 tags=("hardcoded",),
             )
         )

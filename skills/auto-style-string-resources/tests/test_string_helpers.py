@@ -311,11 +311,19 @@ class SubprocessSafetyTests(unittest.TestCase):
                 self.assertEqual(env["LANG"], "C.UTF-8")
 
     def test_platform_environment_preserves_only_explicit_allowlist(self):
-        with patch.dict(os.environ, {"SystemRoot": "C:\\Windows", "LC_CTYPE": "C", "HOME": "private"}, clear=True):
-            env = minimal_environment()
-            self.assertEqual(env["SystemRoot"], "C:\\Windows")
-            self.assertEqual(env["LC_CTYPE"], "C")
-            self.assertNotIn("HOME", env)
+        # Windows os.environ canonicalizes keys to uppercase; POSIX keeps spelling.
+        # The subprocess contract is a case-insensitive allowlist, not key casing.
+        for spelling in ("SystemRoot", "SYSTEMROOT", "systemroot"):
+            with self.subTest(spelling=spelling), patch.dict(os.environ, {
+                spelling: "C:\\Windows", "LC_CTYPE": "C", "HOME": "private",
+                "Private_Token": "sentinel", "PyThOnPaTh": "sentinel",
+            }, clear=True):
+                env = {key.upper(): value for key, value in minimal_environment().items()}
+                self.assertEqual(env["SYSTEMROOT"], "C:\\Windows")
+                self.assertEqual(env["LC_CTYPE"], "C")
+                self.assertEqual(set(env), {
+                    "SYSTEMROOT", "LC_CTYPE", "PYTHONDONTWRITEBYTECODE", "PYTHONIOENCODING",
+                })
 
     def test_timeout_is_enforced(self):
         with tempfile.TemporaryDirectory() as folder:

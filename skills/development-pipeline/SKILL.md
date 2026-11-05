@@ -7,8 +7,8 @@ description: >-
 metadata:
   tags: "engineering-workflow"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
-  version: "1.0.0"
-  updated_at: "2026-11-04T18:39:53Z"
+  version: "1.1.0"
+  updated_at: "2026-11-05T04:30:20Z"
 ---
 
 # 开发流水线 / Development Pipeline
@@ -44,6 +44,8 @@ python3 skills/development-pipeline/scripts/pipeline.py status .agent-workspace/
 - 明确需求来源、非目标、风险、验收与本轮终点：调查、方案、本地候选、包、PR、安装或发布分别对待。普通技术决策自主处理，必要权限、关键产品取舍或用户保留决定才请求确认。
 - 保留用户源码、暂存/未提交改动、真实配置与数据、私有记忆和恢复材料。任务、角色、历史和流水线阶段都不扩大权限，不默认提交、推送、安装、发布或清理。
 - 根据任务选择轻量修复、常规开发、架构/数据变更或已有候选交付路径。复用已有有效契约与证据，不强制全仓测绘、完整设计或所有阶段文档。
+
+需要将开发愿望形成主计划时，可先用 interactive-planning-doc 前置调查、集中关键澄清并统一成稿；已有有效计划直接消费。记录主计划路径、修订与可执行范围；核心未决只阻止依赖它的工作，完整草稿不等于全部就绪或实施授权。
 
 ## 切片、层次和轮次
 
@@ -86,6 +88,8 @@ python3 skills/development-pipeline/scripts/pipeline.py status .agent-workspace/
 
 ## 任务与记忆衔接
 
+主调度者负责分派和结果接收，明确各 JOB 的 owner、产物接收者与验收职责。执行者只在获配任务和写入/动作范围内交付候选、自检、证据及缺口；测试/审查职责报告实际验证，记忆维护职责只归并已接收事实，不能以计划、任务完成或阶段推进扩大权限。复用现有角色和任务包，短任务可由当前线程顺序完成，独立性按实际要求保留。
+
 - 主调度者将阶段/里程碑、layer、slice、round/wave、检查点、验收与候选关联到任务。使用 multi-agent-engineering 时生成 task-handoff-v1，并附本任务相关的这些字段及流水线运行目录/节点 ID；不把全部流水线历史交给子 Agent。
 - 用 project-memory 的 knowledge-extract-v1 提取相关事实、地图与图纸，连同需求、验收、权限和基线形成可开工输入。测试、审查、维护、cleaner 等角色仍需其必需环境或原始材料，地图不能补足这些缺口。
 - 各角色按原任务回报协议返回实际产物、候选、证据与缺口。普通事实可直接澄清，公共契约/范围/验收变化由主调度者协调版本并通知受影响任务。
@@ -93,7 +97,7 @@ python3 skills/development-pipeline/scripts/pipeline.py status .agent-workspace/
 
 ## Reporting and Observer / 每步汇报与观察页面
 
-采用 [观察器契约](references/observer-contract.md) 和 [操作说明](references/observer.md)，以项目 `.agent-workspace/index.html` 作为固定入口，查看活动和历史运行并进入各自详情。每项目/运行独立目录与身份，预制静态网页由标准库脚本更新相邻数据文件，默认无需服务或端口。规划时逐步提交定义，执行时上报语义事件。主调度者在结构更新、任务开始/结果、检查点、顾问、返回或阻塞时向对话转发简短摘要；无需为每次读文件或 shell 调用输出完整图。
+采用 [观察器契约](references/observer-contract.md) 和 [操作说明](references/observer.md)，以项目 `.agent-workspace/index.html` 作为固定入口，查看活动和历史运行并进入各自详情。每项目/运行独立目录与身份，预制静态网页由标准库脚本更新相邻数据文件，默认无需服务或端口。完整主计划可在开始阶段形成，执行定义仍可按拆片进度逐步提交绘图或一次导入；两者互不限制，start 前仍须满足原准入校验。执行时上报语义事件。主调度者在结构更新、任务开始/结果、检查点、顾问、返回或阻塞时向对话转发简短摘要；无需为每次读文件或 shell 调用输出完整图。
 
 运行详情页刷新轮次、并行节点、检查点、失败返回边、当前尝试、备注和时间线；completed 后停止刷新并自动生成单文件 report.html 供最终查看。有新结构可用 status --mermaid 在对话展示图。索引和详情只读，数据来自执行者上报，不能独立证明进程仍在运行或代码通过，也不能向聊天自行发消息；工具不自动执行 Agent、产品命令或发布。
 

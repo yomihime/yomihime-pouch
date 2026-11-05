@@ -1,4 +1,4 @@
 interface:
   display_name: "交互式计划文档"
-  short_description: "把讨论整理成可执行计划文档"
-  default_prompt: "使用 $interactive-planning-doc，把这次讨论整理成可执行计划文档。"
+  short_description: "前置调查与关键澄清，尽早形成含里程碑、验收和交接基线的完整主计划"
+  default_prompt: "使用 $interactive-planning-doc，先调查，必要时集中澄清，把开发愿望整理成完整可交接的主计划。"

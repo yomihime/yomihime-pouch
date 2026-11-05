@@ -4,8 +4,8 @@ description: 初始化、维护、检查和迁移项目本地工程记忆，保�
 metadata:
   tags: "project-state"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
-  version: "1.0.0"
-  updated_at: "2026-11-04T17:20:31Z"
+  version: "1.0.1"
+  updated_at: "2026-11-05T04:30:20Z"
 ---
 
 # 项目工程记忆 / Project Memory

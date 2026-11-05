@@ -460,7 +460,9 @@ class ProjectIndexTests(unittest.TestCase):
         self.assertEqual(set(self.entries()), {"real/pipeline"})
 
     def test_untrusted_text_and_local_urls_cannot_escape_data_script(self):
-        name = "quote # % ? <x>"
+        # Keep real paths valid on Windows while retaining hostile text as data.
+        # POSIX additionally exercises characters its filesystem can represent.
+        name = "quote # % 雪" if os.name == "nt" else "quote # % ? <x>"
         payload = '</script><img src=x onerror="alert(1)">\u2028next'
         run = self.init(name, payload)
         data_file = (self.work / "pipeline-index-data.js").read_text(encoding="utf-8")
@@ -471,7 +473,14 @@ class ProjectIndexTests(unittest.TestCase):
         link = entry["observer"]
         self.assertNotIn("#", link)
         self.assertNotIn("?", link)
-        self.assertEqual((self.work / unquote(urlsplit(link).path)).resolve(), (run / "observer" / "index.html").resolve())
+        for encoded in ("%20", "%23", "%25"):
+            self.assertIn(encoded, link)
+        if os.name != "nt":
+            for encoded in ("%3F", "%3C", "%3E"):
+                self.assertIn(encoded, link)
+        parsed = urlsplit(link)
+        self.assertEqual((parsed.query, parsed.fragment), ("", ""))
+        self.assertEqual((self.work / unquote(parsed.path)).resolve(), (run / "observer" / "index.html").resolve())
 
     def test_file_page_shows_stale_and_completed_separately_without_executing_text(self):
         if os.environ.get("PIPELINE_BROWSER_TESTS") != "1":
@@ -485,7 +494,8 @@ class ProjectIndexTests(unittest.TestCase):
             self.skipTest("Playwright must be resolvable in the minimal child environment for the optional file:// browser test")
         payload = '<img src=x onerror="window.injected=1">'
         self.init("fresh", payload)
-        stale = self.init("陈旧 # ? space", "Old unfinished")
+        stale_name = "陈旧 # % space" if os.name == "nt" else "陈旧 # ? space"
+        stale = self.init(stale_name, "Old unfinished")
         completed = self.init("done", "Completed")
         self.complete(completed)
         journal = stale / "events.jsonl"

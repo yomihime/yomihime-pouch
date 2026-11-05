@@ -4,8 +4,8 @@ description: Audit and refine repository UI strings, i18n resources, and user-fa
 metadata:
   tags: "ui-copy"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
-  version: "1.0.0"
-  updated_at: "2026-11-04T18:35:49Z"
+  version: "1.0.1"
+  updated_at: "2026-11-05T04:30:20Z"
 ---
 
 # Auto Style String Resources / 程序文案风格
@@ -153,7 +153,7 @@ metadata:
 
 脚本只辅助初筛和约束检查，不能替代人工理解调用上下文。
 
-- `scripts/draft_string_tree.py`：粗扫根目录 `i18n/*.json`、`i18n/*.jsonl` 和 `gui/`、`core/`、`utils/` 中的部分 Python 字串，推断页面与分组。它可能漏掉动态构造、其他路径、框架、语言和文档，也可能误报技术字串。`--locale` 按资源文件名筛选，可重复指定；不指定时扫描这些目录下的所有 locale。输出必须人工核验。
+- `scripts/draft_string_tree.py`：粗扫根目录 `i18n/*.json`、`i18n/*.jsonl` 和 `gui/`、`core/`、`utils/` 中的部分 Python 字串，推断页面与分组。它可能漏掉动态构造、其他路径、框架、语言和文档，也可能误报技术字串。`--locale` 按资源文件名筛选，可重复指定；不指定时扫描这些目录下的所有 locale。`source` 统一输出使用 `/` 分隔的项目相对路径，便于跨平台核对。输出必须人工核验。
 - `scripts/check_string_constraints.py`：用正则比较常见占位符、HTML 标签、Markdown 链接、快捷键、路径和错误码。覆盖并不完整，可能误报或漏报；它比较匹配项及其出现次数，不验证位置参数的顺序，也不独立解析命令、转义序列或所有占位符语法。通过不证明所有契约或含义保持不变。
 
 ### Troubleshooting / 失败处理
