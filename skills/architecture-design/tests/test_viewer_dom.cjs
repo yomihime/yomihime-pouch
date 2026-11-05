@@ -33,7 +33,7 @@ const document={getElementById:id=>({'architecture-app':root,'architecture-data'
 const media={matches:false,listeners:{},addEventListener(type,fn){this.listeners[type]=fn;}};const timers=new Map();let timerId=0;const frames=[];
 const win={innerWidth:1500,matchMedia:()=>media,listeners:{},addEventListener(type,fn){this.listeners[type]=fn;}};
 const context={document,window:win,ResizeObserver:class{observe(){}},requestAnimationFrame:fn=>frames.push(fn),setTimeout:fn=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),JSON:{parse:text=>{const value=JSON.parse(text);if(text===json.textContent)parsedModel=value;return value;},stringify:JSON.stringify},console};
-vm.runInNewContext(fs.readFileSync(path.join(base,'assets/viewer.js'),'utf8'),context);
+vm.runInNewContext(fs.readFileSync(path.join(base,'assets/viewer.js'),'utf8'),context,{timeout:1000});
 function flushFrames(){while(frames.length)frames.shift()();}function tick(){const first=timers.entries().next().value;if(first){timers.delete(first[0]);first[1]();}}
 const byClass=cls=>all(root).filter(x=>x.classList.contains(cls));const one=cls=>byClass(cls)[0];const nodes=()=>byClass('node');const node=id=>nodes().find(x=>x.getAttribute('data-node-id')===id);const nav=()=>byClass('nav-button');const panel=()=>one('detail-panel');const main=()=>one('main');const input=()=>all(root).find(x=>x.tagName==='input');const visible=()=>byClass('trace-visible');
 const openNav=id=>{nav().find(x=>x.textContent.includes(data.views.find(v=>v.id===id).name)).click();flushFrames();};

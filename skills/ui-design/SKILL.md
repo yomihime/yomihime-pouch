@@ -2,10 +2,19 @@
 name: ui-design
 description: Extract a project's actual UI into a concise design guide, or design and verify a new or targeted interface. Use for 设计规范, 提取现有 UI 风格, 新项目界面设计, UI 改版或局部修复, desktop/web UI, visual consistency, and accessibility. Preserve existing visuals and behavior unless changes are explicitly authorized.
 metadata:
-  version: "2026-11-03T15:05:00Z"
+  tags: "interface-design"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
-# UI Design
+# UI Design / 界面设计
+
+## 触发示例与运行要求
+
+- 使用："根据实际页面提取设计规范，保留当前视觉风格"；"修复窄窗口下表单布局并验证焦点状态"。
+- 不使用："只统一错误提示的措辞"；"优化数据库查询"；"画一张独立插画"。文案资源审计、后端性能和独立图像创作不属于界面设计流程。
+- 本技能为设计与验证指导，无运行脚本，不要求 Python、Node.js 或特定操作系统。实际实现、截图和交互验证依赖目标项目已有的构建工具、浏览器或桌面运行环境；没有可运行界面时可检查代码或用户截图，但须标明未实测状态。不能将本技能文档检查当作跨平台视觉或无障碍验收。
 
 ## 目标与边界
 

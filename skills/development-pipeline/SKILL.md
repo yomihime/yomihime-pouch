@@ -5,14 +5,39 @@ description: >-
   按依赖层次与执行轮次推进，用候选绑定、分层验证和质量审查控制交付。
   适用于需要统筹实施与验收的工程任务；单点问答不必启动完整流程。
 metadata:
-  version: "2026-11-04T00:42:00Z"
+  tags: "engineering-workflow"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T18:39:53Z"
 ---
 
-# 开发流水线
+# 开发流水线 / Development Pipeline
 
 用户调用技能的主对话负责推进到本轮约定终点。用明确的需求、依赖、产物和证据组织工程；角色调度可交给 multi-agent-engineering，知识与恢复可交给 project-memory。它们可选，缺少工具时可顺序执行，不能冒充独立审查或真实运行。
 
-## 接入与范围
+<a id="触发示例与运行要求"></a>
+
+## Prerequisites / 触发示例与运行要求
+
+- 使用："把导入功能拆成切片，实施并验证到本地候选"；"组织这次跨模块修复的依赖和验收"。
+- 不使用："只解释这条报错"；"先讨论方案并记录计划，不实施"。前者直接回答，后者优先使用计划文档流程；不因出现工程关键词就启动完整流水线。
+- `scripts/pipeline.py` 需要 **Python 3.9+，仅标准库**；保留 `assets/observer/` 与 `assets/index/`。下限来自 `Path.is_relative_to`，不是已验证所有 3.9+ 解释器的承诺。默认静态页面无需服务或第三方包；查看交互页面需支持 JavaScript 的浏览器。
+- 文件锁在 POSIX 使用 `fcntl.flock`，在 Windows 使用 `msvcrt.locking`；需要可写的本地工作目录，不承诺网络文件系统锁语义。本轮 init/status/view/index CLI 烟测在 Linux x86_64、Python 3.12.14 / 3.13.5 通过；Python 3.9、macOS 和原生 Windows 未实测。可选 `serve` 还需要获准绑定本机端口；此烟测没有验证 HTTP 服务或真实浏览器视觉行为。
+
+## Available Scripts / 脚本与示例
+
+| Script / 脚本 | Purpose and Input / 用途与输入 |
+| --- | --- |
+| [scripts/pipeline.py](scripts/pipeline.py) | 以运行目录管理事件与静态观察页；`init` 建立运行，`status` 读取状态；其他子命令见 `--help` 与 [操作说明](references/observer.md)。 |
+
+在仓库根执行以下合成演示，单独安装时替换技能路径。`--demo` 将新建运行标记为合成演示；命令写入本地运行目录与项目索引，不载入计划，也不执行产品任务或测试；若目录已有运行，另选新的 work-id，不覆盖旧记录。
+
+```sh
+python3 skills/development-pipeline/scripts/pipeline.py init .agent-workspace/pipeline-demo/pipeline --title "Pipeline demo" --project-root . --demo
+python3 skills/development-pipeline/scripts/pipeline.py status .agent-workspace/pipeline-demo/pipeline --json
+```
+
+## Scope and Setup / 接入与范围
 
 - 先遵循有效指导、最新用户要求与已有计划，核对实际工作区、当前改动和必要资源。采用 project-memory 时主调度者完整恢复 current.md，其他角色按任务取相关知识。
 - 本地计划和运行材料统一使用 `.agent-workspace/`。首次开工或旧项目材料尚未整理时由 yomihime-init 盘点并安全组织，日常流水线不搜索旧目录或双写；缺少该技能时保留现有材料，报告待整理项并继续不依赖迁移的工作。
@@ -34,7 +59,7 @@ metadata:
 
 架构工作进入实现的条件是本切片边界、不变量、输入契约和验收方法足够明确，高影响待决项已处理；关键可行性假设按风险用原型、契约检查或真实环境验证，证据不足仍标待验。图纸存在、方案已接受或架构任务结束不等于运行验证通过。把必要验证关联到现有切片和检查点，候选变化后复核受影响契约与证据，不另建执行状态或事件协议。
 
-## 阶段与退出条件
+## Stages and Exit Criteria / 阶段与退出条件
 
 | 阶段 | 需要的结果 | 退出条件 |
 | --- | --- | --- |
@@ -66,11 +91,15 @@ metadata:
 - 各角色按原任务回报协议返回实际产物、候选、证据与缺口。普通事实可直接澄清，公共契约/范围/验收变化由主调度者协调版本并通知受影响任务。
 - 复用已有主计划或 .agent-workspace/<work-id>/plan.md 管详细需求与验收；current.md 直接记录目标、当前轮次/attempt/候选、关键结果、阻塞和下一步。各运行的 events.jsonl 是机器事件源，项目索引、网页/API/status 由此派生，不再人工维护另一份进度表。
 
-## 每步汇报与观察页面
+## Reporting and Observer / 每步汇报与观察页面
 
 采用 [观察器契约](references/observer-contract.md) 和 [操作说明](references/observer.md)，以项目 `.agent-workspace/index.html` 作为固定入口，查看活动和历史运行并进入各自详情。每项目/运行独立目录与身份，预制静态网页由标准库脚本更新相邻数据文件，默认无需服务或端口。规划时逐步提交定义，执行时上报语义事件。主调度者在结构更新、任务开始/结果、检查点、顾问、返回或阻塞时向对话转发简短摘要；无需为每次读文件或 shell 调用输出完整图。
 
-运行详情页刷新轮次、并行节点、检查点、失败返回边、当前尝试、备注和时间线；completed 后停止刷新并自动生成单文件 report.html 供最终查看。view 可从事件重建组件与投影，投影失败而事件已落盘时不重复上报。有新结构可用 status --mermaid 在对话展示图。索引和详情只读，数据来自执行者上报，不能独立证明进程仍在运行或代码通过，也不能向聊天自行发消息；工具不自动执行 Agent、产品命令或发布。
+运行详情页刷新轮次、并行节点、检查点、失败返回边、当前尝试、备注和时间线；completed 后停止刷新并自动生成单文件 report.html 供最终查看。有新结构可用 status --mermaid 在对话展示图。索引和详情只读，数据来自执行者上报，不能独立证明进程仍在运行或代码通过，也不能向聊天自行发消息；工具不自动执行 Agent、产品命令或发布。
+
+## Troubleshooting and Delivery / 失败处理与交付
+
+`view` 可从事件重建组件与投影；投影失败而事件已落盘时不重复上报。项目索引输出失败时用 `index` 重建；事件日志损坏则保留现场并报告，不修剪历史。具体恢复命令见 [操作说明](references/observer.md)。
 
 交付、证据复用和收束按 [交付与变化处理](references/delivery.md)。首次实施读取切片参考，制定验收读取质量参考，交付/候选变化时读取交付参考；不要求每个子 Agent 加载全套技能。
 

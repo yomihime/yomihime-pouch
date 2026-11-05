@@ -1,19 +1,24 @@
 ---
 name: interactive-planning-doc
 description: >-
-  Use this skill when Codex needs to create, revise, or finalize a planning
-  document through iterative user discussion before implementation. Trigger for
-  docs-only/no-code planning sessions, architecture or refactor plans, feature
-  milestones, TODO resolution plans, commit cadence design, validation criteria,
-  acceptance cleanup, version/release preparation, or when the user asks to
-  avoid code changes and capture decisions in a reusable execution plan.
+  Create or revise engineering plans through discussion, with milestones,
+  validation and acceptance criteria. Use before implementation, not for coding.
 metadata:
-  version: "2026-11-03T17:20:00Z"
+  tags: "engineering-plans"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T17:20:31Z"
 ---
 
-# Interactive Planning Doc
+# Interactive Planning Doc / 交互式工程计划
 
 把持续变化的产品或工程讨论整理成可执行的计划文档。目标读者是未来负责实现的 agent，而不是当前聊天参与者。
+
+## 触发示例与运行要求
+
+- 使用："先不要改代码，把重构讨论整理成可执行计划"；"更新主计划中的里程碑和验收标准"。
+- 不使用："按已确认方案立即修复并跑测试"；"只解释这个算法"；"润色一封邮件"。实现、知识问答和一般文案不应因含有 TODO 或版本等词而触发计划文档流程。
+- 本技能为文档指导，无运行脚本，不要求 Python、Node.js 或特定操作系统。需要宿主能读取任务资料，并在获准时编辑计划；项目测试工具只有实际验证计划中的假设时才需要。宿主能力与项目平台须现场核实，未声称在所有客户端端到端测试过。
 
 ## 基本原则
 
@@ -249,13 +254,12 @@ metadata:
 
 定稿前确认：
 
-- `description` 仍能准确触发本 skill，且没有混入只属于单个项目的细节。
 - 项目本地计划与中间产物位于统一工作区，正式交付物遵循用户指定位置；不存在重复主计划或长期旧路径回退。
 - 未参与讨论的 agent 也能按计划执行。
 - 已确认决策容易找到。
 - 剩余问题少且明确。
 - 里程碑足够细，不容易被宽泛理解。
-- 提交分组少于里程碑，并对应可审查阶段。
+- 提交分组对应可审查阶段，不限制它与里程碑的数量关系；一个里程碑可以对应一个提交。
 - 收尾不是未完成开发工作的垃圾桶。
 - 相关时包含版本、发布、迁移和用户数据规则。
 - 没有把可从 `AGENTS.md`、架构文档或源码读取的信息重复写成长期噪音。

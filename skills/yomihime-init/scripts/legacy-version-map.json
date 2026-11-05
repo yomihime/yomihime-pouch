@@ -1,0 +1,646 @@
+{
+  "schema_version": 1,
+  "source_repository": "https://github.com/yomihime/yomihime-pouch",
+  "source_commit": "a890a0b69e7f518922591cc42e39d91f9b2a99ec",
+  "target_version": "1.0.0",
+  "target_status": "candidate_not_published",
+  "digest_algorithm": "sha256(canonical UTF-8 JSON entries; sorted paths and keys; no whitespace)",
+  "skills": {
+    "architecture-design": {
+      "legacy_version": "2026-11-04T00:41:00Z",
+      "tree_sha256": "f22d90e0187ca386d5e884a06946edc4e012f390c93a084631299b54c2be8e5f",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "685e3e67eb56a648b87097f113044118c90ceb88d2f473655a4088adc69100b6"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7073af1543c6ae8992683674d349814c35c4b1b79891a68eb3f2410cb16ecf01"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "0a3193eded18a930edec3d03e14519b8de441179de6895bd4f720eaa2e1fd6a9"
+        },
+        {
+          "path": "assets",
+          "type": "directory"
+        },
+        {
+          "path": "assets/demo.json",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "b9bf6781b3fe3447f0776c16162ad91eed7f85f2fcedd296fa636682e5166371"
+        },
+        {
+          "path": "assets/viewer.css",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "e64135d3d17a2a244d3b85a435aa15f3ccb138b5c3b6e22c1684bdd79e67cb29"
+        },
+        {
+          "path": "assets/viewer.html",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "f7056139a6f86955c0b6ad07d2e3a463b445471f7f5b86f6c52d5828501f3a8f"
+        },
+        {
+          "path": "assets/viewer.js",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7d431da7a3459efb1bde15f357082ec41ddbb84a09bee8244259267a6f130f94"
+        },
+        {
+          "path": "references",
+          "type": "directory"
+        },
+        {
+          "path": "references/examples.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "6596125a3d4d4b050efecfbad77d6071a021936da4dbbd19a3f37e9f913520e8"
+        },
+        {
+          "path": "references/implementation-handoff.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "6214337cf428c46b926a77677bd03b4a72d12f2c42ecde82e72812eb2163d64a"
+        },
+        {
+          "path": "references/source-contract.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "c0cdec25d9fe0eebfb171dba2994efb1d7913daa5448f9b59fbc21487950edbd"
+        },
+        {
+          "path": "references/workflow.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "52a0c3be9d8d5677ab10f62ca8a5e56d8019155277f9a3051d6389a4380f8242"
+        },
+        {
+          "path": "schemas",
+          "type": "directory"
+        },
+        {
+          "path": "schemas/architecture.schema.json",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "692222799b2d04ea959ae49f0a4699992e67053fe73e0bc7655de98a9ef8ea41"
+        },
+        {
+          "path": "scripts",
+          "type": "directory"
+        },
+        {
+          "path": "scripts/render_architecture.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "a924f87c8c5ceff0ed6ea5e966d0fc3efdaca71f0e22a33bd98ded8cb67980ca"
+        },
+        {
+          "path": "tests",
+          "type": "directory"
+        },
+        {
+          "path": "tests/test_lifecycle_contract.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "380ecaf94e301d489c29aebed7183a77dedea51490e6d7173fa47dbc59b398aa"
+        },
+        {
+          "path": "tests/test_renderer.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "082902d123d2dcfd90a0f5817f97316863efd87111bf6d3e91da25e4758e40fd"
+        },
+        {
+          "path": "tests/test_viewer_dom.cjs",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "c0246923318d3a73d5350eb34563cb8b81f1aca8aff18c9882be59497f8c2d64"
+        }
+      ]
+    },
+    "auto-style-string-resources": {
+      "legacy_version": "2026-11-03T15:38:00Z",
+      "tree_sha256": "ee369e326cca28a59f912e117a8a873a3ad95176a92cca468b198f6d4191d55c",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "1b9d25705d2d3f48f8158976091685430e34e3a7f526273b48e3e89a34e2d78f"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "464e31ab100f8687710a871b1fb09201ac866c7bef3ff93d4ba79d2a21965590"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "adf91a26f2e07e8c0871bdd5dc229d75618da1eaeadb16f8145d4ff259d86f36"
+        },
+        {
+          "path": "scripts",
+          "type": "directory"
+        },
+        {
+          "path": "scripts/check_string_constraints.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "3d02940dd7f7abb9811dd985e1b28daa26fff2620a7b8ea64ab9ec7782cde6d0"
+        },
+        {
+          "path": "scripts/draft_string_tree.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "a90f387553adf36aba872f4c61bbaf9e21359d5c040634172352a7384279e820"
+        },
+        {
+          "path": "tests",
+          "type": "directory"
+        },
+        {
+          "path": "tests/test_guide_documentation.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7941e9bd740b22585e3bb62cbbb375900b0172d0e69713eec17d28f752d8e5d6"
+        },
+        {
+          "path": "tests/test_string_helpers.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "f69c2d1b1cd1f2cdda818a7e2ae39dd987db9643801a03e160c369663313864c"
+        }
+      ]
+    },
+    "development-pipeline": {
+      "legacy_version": "2026-11-04T00:42:00Z",
+      "tree_sha256": "48f259bf4ac868d272e5b37b5dbd86e01c5199369704fd9d023d878f070bcb84",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "74ccdec87b2f7b06184e9c59c4b95ec64b55a947329b6ddf756be66f5c7298e0"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "8b019e94cb884b2c5c7a671e286289532eb8d96ed124b020f58cda1f7a0a9e25"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "f10b209afc283fc7c7c8b693f3d7e33a1841a538f3322b9441bed801e7158d86"
+        },
+        {
+          "path": "assets",
+          "type": "directory"
+        },
+        {
+          "path": "assets/demo-plan.json",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "2b0f9375c744f5f8288b969fd521b6ef0034b58fa1e31337c9dbe7fefaa6218b"
+        },
+        {
+          "path": "assets/index",
+          "type": "directory"
+        },
+        {
+          "path": "assets/index/app.js",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "154489583b880b7eb83234df850e27b681c99e48cbe4f645059ee0d105f0e01e"
+        },
+        {
+          "path": "assets/index/index.html",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "40e115fe53cfd575da596fdfcc5c83c9194e82788bf9eb8bff0b0b79d1cdb5a1"
+        },
+        {
+          "path": "assets/index/styles.css",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "5e8067fa238703ccb331a3176c3321e77fa010b34b033c7af1ec6f0d18789dad"
+        },
+        {
+          "path": "assets/observer",
+          "type": "directory"
+        },
+        {
+          "path": "assets/observer/app.js",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "a1efab646a872d97fc948d25971ac86eedbca723b9dc49d68aef977d767f3995"
+        },
+        {
+          "path": "assets/observer/index.html",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "f3edaaf41c84bc0a67fb8a0ecc9eec93b4e76b64ed5b015bafc8ed10aee8a114"
+        },
+        {
+          "path": "assets/observer/styles.css",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "738b75a44ae5acada033c7fdd63cac2a9f0b7d3a2bacac0d8c406abca520bcd8"
+        },
+        {
+          "path": "references",
+          "type": "directory"
+        },
+        {
+          "path": "references/delivery.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7a9e3447f4ddd099420ce6e13d86d40f369f41d7b32d103759d96a571067e099"
+        },
+        {
+          "path": "references/observer-contract.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "f70ac73b193bc72f7da502f2754831a136e68745a66beb607a7398ac19caaa57"
+        },
+        {
+          "path": "references/observer.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7f0b12298c0db6be2d4fd33cc825ef1095cc069948bb2933dd48f0fdf406c12a"
+        },
+        {
+          "path": "references/quality.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "622ab3d82835ce70c760bbcbf6ee7f8591582a6fec5638fe2c4adbb489e9a264"
+        },
+        {
+          "path": "references/slicing.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "b8a26b56bd0c2cb334da76af8d6c20ec10c1118974a7181b32cf0d6192b0754b"
+        },
+        {
+          "path": "scripts",
+          "type": "directory"
+        },
+        {
+          "path": "scripts/pipeline.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "0e67dbc5b071558905a088f7fd5d45280bc7bc2de6f3d988214b574923874ac3"
+        },
+        {
+          "path": "tests",
+          "type": "directory"
+        },
+        {
+          "path": "tests/test_index_dom.cjs",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "2b1ea98cca3b4650cead20d551df5e546b0f1302d9717716ba6eee5f75882b51"
+        },
+        {
+          "path": "tests/test_pipeline.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "61c770b1fd78c6fd61701a9184499e51ac0e463f920346130478843f6555e5f4"
+        },
+        {
+          "path": "tests/test_pipeline_index.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "1bda945e83f546f5cb39739b5d457e7bbf018272b3cd14b90ac0ac4827c987ac"
+        }
+      ]
+    },
+    "interactive-planning-doc": {
+      "legacy_version": "2026-11-03T17:20:00Z",
+      "tree_sha256": "91d035068166c6761f8d5a04d4d204c6b1e0e8a1d697f56f0288d3e71866227e",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "0157cf44d6d3abd541f5ceca55c9063535cb293732c40a30f5c8c4eeb6470024"
+        },
+        {
+          "path": "SKILL.en.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "39ef766c79e042263935cc7f7ebe9a36c73e312a76ef557b47a96257747ec738"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "22b1bd4dc95222293b4b740eeb801d0677d2e3963604f4a82730cf4aeba681d0"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "33ff33b83c16583f5ef30f49533b4281900c1b3353f0e5998d618e3b4c4d3643"
+        },
+        {
+          "path": "tests",
+          "type": "directory"
+        },
+        {
+          "path": "tests/test_planning_contract.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7b1211154ecb901fe386619ca94bc5be4cf8341de3a9bbc544cba9a97130cc59"
+        }
+      ]
+    },
+    "multi-agent-engineering": {
+      "legacy_version": "2026-11-03T17:21:19Z",
+      "tree_sha256": "3b3c1fce22004504e9826e1609312c1d57c114ce9de30d4d07e21ffe172c16d2",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "6b9128ac86afa17ceeeb9e6979f3556ed7dcaf02dc55ee0d7068516ec3996f64"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "91c5efda9c12ff6c5d5d22484012272aa44af8838b856fe709711fe6ff0b0f6a"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "20ac4335798c7fe1a75ca244bbeedc98b876a400737975bbc1bd8404bd57dffc"
+        },
+        {
+          "path": "references",
+          "type": "directory"
+        },
+        {
+          "path": "references/coordination.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "26bc8e5c6d586ef3023d7c57b1b69b7eabed8e33d38278b7a29a0f085c3513a9"
+        },
+        {
+          "path": "references/desktop-audio-example.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7736d417a742e04840417916c16cc3804dd29a909b748cbb80eabd9e01699ca0"
+        },
+        {
+          "path": "references/model-policy.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "a527c7373d775e3c4f5a2d3c7d8b2e5b544fa39310236156961606ccbd0fac5c"
+        },
+        {
+          "path": "references/task-cards.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "e4055938bb2257190643e5223756dac60ab412d7990705761ca255ef12afcafe"
+        }
+      ]
+    },
+    "project-memory": {
+      "legacy_version": "2026-11-03T17:21:19Z",
+      "tree_sha256": "748f0400eb8d3bb840a10009415d65ee6f24ef937fe690da5aa27c8224556969",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "3f9c24fe1123a4c6b2a2b156460885f6578c1d1901403b97d4fca8e236844500"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "b91e16a1210e509782ea66d5adf8f3d88f7380e783d96b39c0d224c0eb6808b1"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "80de65cb680370330cae2e92e91f3dd43aa0b3ba28869f19fe43d7f54f49fecf"
+        },
+        {
+          "path": "references",
+          "type": "directory"
+        },
+        {
+          "path": "references/collaboration.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "9c18f5dc8f2d48342f1dd704bb9efdce79b10a961e925369117a54af5a368ad9"
+        },
+        {
+          "path": "references/maintenance.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "2ed9db2c34a9107b89f13a32b8d979823f43b2fdcc1b61c3fa5af66cf37d10c6"
+        },
+        {
+          "path": "references/memory-schema.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "9574788e04653efc2ca969b42c65ba3a73b3c711f8f88af1d2ff3dadda0ba845"
+        },
+        {
+          "path": "references/privacy-and-loading.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "7c4baf78de14ed28be4d92c7d7174566157088739c4217f69708ea64afcf12b9"
+        }
+      ]
+    },
+    "ui-design": {
+      "legacy_version": "2026-11-03T15:05:00Z",
+      "tree_sha256": "6e6ca2abb8a58cecc0b7e78168dd61eb2848aa0129b2e6f065d3e49e72e1fafe",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "README.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "63e5b343a27b674d74de0f59e095b6b36ab37dcbd8f5bdab48267ebcd9bb15d0"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "6249778864c00f0bae0b8f9ba5b9be3c46606dc9b862b71894123627263acc74"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "bef3ca20f47dbfd0f9bf54d2b930d27eb8686848045281b6e99c2f0e004708c2"
+        },
+        {
+          "path": "references",
+          "type": "directory"
+        },
+        {
+          "path": "references/examples.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "b0e9d7f92ee90ef3dd19097d819dfedb0441505d92291e1e30041a41f9d71ff7"
+        },
+        {
+          "path": "references/resources.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "16b8cfb36df8543384093751064362ae8854de7a38a86e0f59f6f7bd3fa1d368"
+        },
+        {
+          "path": "tests",
+          "type": "directory"
+        },
+        {
+          "path": "tests/test_design_contract.py",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "82f1658cc61db069b3407a9130baf055a6b7fdad913a24cba086bf3bcbad4e58"
+        }
+      ]
+    },
+    "yomihime-init": {
+      "legacy_version": "2026-11-03T17:20:00Z",
+      "tree_sha256": "1dc23912d9a1688f38587ee085428556b90068de492472559a36e9b9ffa3099e",
+      "entries": [
+        {
+          "path": "LICENSE",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "da59389a0ce0e491a5856d2b3cb854bcf29d2a8d5c31387f502117bc9f55a83b"
+        },
+        {
+          "path": "SKILL.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "d495718b4e6f2802f2f889d5ad03ee1954b5f377a0ffa68cf666d164a58f54c5"
+        },
+        {
+          "path": "agents",
+          "type": "directory"
+        },
+        {
+          "path": "agents/openai.yaml",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "180dda5a4ae2c5c7e6cea8dad6b312a87dbb905e1e7ebc8609048c5702d20a0d"
+        },
+        {
+          "path": "references",
+          "type": "directory"
+        },
+        {
+          "path": "references/acceptance-cases.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "822356ae7ac7e00f72fafdae3dfa78e0462b489c3fe2a5e723290262b976a3b6"
+        },
+        {
+          "path": "references/skill-sync.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "5eb7848ff2c317fd84146b65efe6b7b831efe777eae6a02c8f995467d01cd421"
+        },
+        {
+          "path": "references/workspace-migration.md",
+          "type": "file",
+          "mode": "100644",
+          "sha256": "aad27c58721373c01db8293a6a9e57235f61a3857260982e4549c50d6214762f"
+        }
+      ]
+    }
+  }
+}

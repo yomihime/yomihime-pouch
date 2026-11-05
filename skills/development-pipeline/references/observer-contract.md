@@ -8,6 +8,8 @@
 
 运行材料位于各项目获准的 .agent-workspace/<work-id>/pipeline/，各运行 events.jsonl 是唯一机器事件源；项目固定入口 .agent-workspace/index.html、运行页面与 status 都是可重建投影，不是另一份人工项目记忆。init 固定项目 id/name/root 与随机 run_id，不共享全局注册表或浏览器存储；不同项目、运行不共用目录。记录中不放秘密和完整日志。
 
+work-id 不得占用 memory、design、architecture、plans、work、runtime.md、index.html、pipeline-index-data.js、.pipeline-index.lock，即使对应路径尚未生成，也不得与其他已有受管路径冲突。按 Windows 路径语义比较保留名时不区分大小写，尾部点或空格形成的别名同样禁止，例如 INDEX.HTML、index.html.。
+
 入口 scripts/pipeline.py，Python 标准库；预制组件 assets/observer/index.html、app.js、styles.css。默认复制到运行目录的 observer/，打开 index.html 即可；每次事件追加后在同一锁内原子更新 state.js。网页加载同目录经典脚本取得投影，不使用 file:// fetch，不启动服务/端口，不要求放宽浏览器设置。页面固定校验项目和 run_id，拒绝身份不匹配或版本倒退的数据。
 
 项目索引仅发现 `.agent-workspace/<work-id>/pipeline/events.jsonl`，跳过保留目录、符号链接和嵌套项目；不会把记忆证据、初始化暂存或备份中的日志副本当运行。重放发现的日志时，损坏或不可读显示读取失败，不使用缓存状态。显式指定其他 run-dir 仍可直接操作，但不自动进入索引；不存在旧目录回退或自动迁移。completed 显示为已归档，其他运行按最后事件时间满 7 天显示为过期，否则显示为活动。分类是事件时间视图，不探测实际进程；归档和过期不表示移动或删除文件。索引提供现存观察页和已完成报告的链接，标明演示运行。init、事件更新及 view 重建所属统一工作区的索引数据，也可用 index 命令手动重建；索引页每 5 秒读取数据并按当前时间重新分类。
@@ -43,6 +45,16 @@ ID 全局唯一且稳定，轮次顺序按数组。任务有串行依赖时分�
 passed 需非空候选与存在的证据文件，保存路径及校验但不提供文件浏览器，不把摘要当完整日志。failed 必须有非空原因；必需项不能 skipped；非必需跳过需理由，可从 pending 显式跳过。passed/failed 先 running 再结果，不可直接把未来轮次或待执行检查点标通过。失败与旧通过保留事件身份，不追溯改为成功。
 
 needs_decision、consulting、blocked 只允许此前已 running 的当前轮节点继续上报 passed/failed，记录当前 attempt 的完整候选/证据/原因；不允许新的 running、pending 跳过或检查点/轮次推进。接收在途结果保持已有决策状态与原失败；新成功不会恢复调度，新失败不会把 consulting/blocked 改回 needs_decision。结果到达顺序不能决定哪些真实结果被保留。主调度者应在返回前接收已完成结果，对实际取消/交接的未完成任务记录备注与依据。
+
+接收在途终态只记录节点结果，不改变运行的决策状态：
+
+| 接收前运行状态 | 此前 running 节点本次提交 | 接收后运行状态 |
+| --- | --- | --- |
+| needs_decision | passed 或 failed | needs_decision |
+| consulting | passed 或 failed | consulting |
+| blocked | passed 或 failed | blocked |
+
+表中每行都禁止启动新节点或推进轮次。节点的 passed/failed 与运行状态是两个字段；不要用节点结果重算运行状态。
 
 return 保留历史，增加 attempt，将指定轮次及下游任务/检查点重置为待执行，早于目标的记录仍保留原身份；主调度者负责判断更早证据是否受影响。仍有 running 任务时，需实际协调停止并 --quiesced 确认交接后再重排；此参数不终止进程，不替代已完成结果的上报。重复/不合法状态更新拒绝，不破坏历史。
 

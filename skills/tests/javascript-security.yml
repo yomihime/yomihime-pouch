@@ -1,0 +1,64 @@
+# Maintenance-only supplemental JS checks. They do not replace SkillSpector,
+# Semgrep Registry taint analysis, browser/CSP tests, or manual review.
+rules:
+  - id: pouch-unsafe-html-write
+    languages: [javascript]
+    severity: ERROR
+    message: Untrusted text must not reach an HTML-parsing sink. Prefer textContent.
+    pattern-either:
+      - pattern: $NODE.innerHTML = $VALUE
+      - pattern: $NODE.outerHTML = $VALUE
+      - pattern: $NODE.insertAdjacentHTML(...)
+      - pattern: document.write(...)
+      - pattern: document.writeln(...)
+  - id: pouch-dynamic-code
+    languages: [javascript]
+    severity: ERROR
+    message: Dynamic JavaScript code execution requires removal or explicit source review.
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+      - pattern: Function(...)
+      - pattern: setTimeout("...", ...)
+      - pattern: setInterval("...", ...)
+  - id: pouch-inline-event-attribute
+    languages: [javascript]
+    severity: ERROR
+    message: Do not construct inline executable event attributes from data.
+    patterns:
+      - pattern: $NODE.setAttribute($NAME, $VALUE)
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: '["\x27]on[a-zA-Z]+'
+  - id: pouch-review-url-write
+    languages: [javascript]
+    severity: INFO
+    message: Review URL provenance and permitted schemes; a hit is not itself a vulnerability.
+    pattern-either:
+      - pattern: $NODE.src = $VALUE
+      - pattern: $NODE.href = $VALUE
+      - pattern: $NODE.setAttribute("href", $VALUE)
+      - pattern: $NODE.setAttribute("src", $VALUE)
+  - id: pouch-review-network
+    languages: [javascript]
+    severity: INFO
+    message: Review fixed endpoint, scope, read-only behavior, and time bounds.
+    pattern-either:
+      - pattern: fetch(...)
+      - pattern: new XMLHttpRequest(...)
+      - pattern: new WebSocket(...)
+      - pattern: navigator.sendBeacon(...)
+  - id: pouch-review-vm-boundary
+    languages: [javascript]
+    severity: INFO
+    message: VM is not a security sandbox; execute only fixed trusted test source with timeout.
+    pattern-either:
+      - pattern: $VM.runInNewContext(...)
+      - pattern: $VM.runInContext(...)
+  - id: pouch-review-file-read
+    languages: [javascript]
+    severity: INFO
+    message: Review local file source and ensure no untrusted path or secret ingestion.
+    pattern-either:
+      - pattern: $FS.readFileSync(...)
+      - pattern: $FS.readFile(...)

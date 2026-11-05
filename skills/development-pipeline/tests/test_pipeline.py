@@ -6,6 +6,7 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+from pipeline_test_processes import IsolatedProcesses
 import sys
 import tempfile
 import threading
@@ -33,6 +34,7 @@ def plan():
 
 class PipelineTests(unittest.TestCase):
     def setUp(self):
+        self.processes = IsolatedProcesses(self)
         self.temp = tempfile.TemporaryDirectory(prefix="pipeline-unit-")
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
@@ -349,10 +351,10 @@ class PipelineTests(unittest.TestCase):
                 pipeline.mutate(run, "start")
                 for entity in ("a", "b"):
                     pipeline.mutate(run, "task", entity_id=entity, status="running")
-                children = [subprocess.Popen([sys.executable, "-X", "utf8", str(SCRIPT), "task", str(run), entity, status, "--note", "terminal result", "--candidate", entity + "-v1", "--evidence", str(self.evidence)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                children = [self.processes.start([sys.executable, "-X", "utf8", str(SCRIPT), "task", str(run), entity, status, "--note", "terminal result", "--candidate", entity + "-v1", "--evidence", str(self.evidence)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             for entity, status in (("a", "failed"), ("b", outcome))]
                 for child in children:
-                    out, error = child.communicate(timeout=30)
+                    out, error = self.processes.communicate(child, timeout=30)
                     self.assertEqual(child.returncode, 0, (out, error))
                 state = pipeline.read_state(run)
                 self.assertEqual(state["status"], "needs_decision")
@@ -391,9 +393,9 @@ class PipelineTests(unittest.TestCase):
         code = ("import importlib.util,sys; s=importlib.util.spec_from_file_location('p',sys.argv[1]);"
                 "p=importlib.util.module_from_spec(s);s.loader.exec_module(p);"
                 "[p.mutate(sys.argv[2],'note',entity_id='a',note=sys.argv[3]+'-'+str(i)) for i in range(8)]")
-        children = [subprocess.Popen([sys.executable, "-X", "utf8", "-c", code, str(SCRIPT), str(self.run), str(i)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) for i in range(4)]
+        children = [self.processes.start([sys.executable, "-X", "utf8", "-c", code, str(SCRIPT), str(self.run), str(i)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) for i in range(4)]
         for child in children:
-            out, error = child.communicate(timeout=30)
+            out, error = self.processes.communicate(child, timeout=30)
             self.assertEqual(child.returncode, 0, (out, error))
         state = self.state()
         self.assertEqual(state["revision"], 35)
@@ -403,8 +405,8 @@ class PipelineTests(unittest.TestCase):
     def test_two_processes_cannot_start_same_node(self):
         self.start()
         commands = [sys.executable, "-X", "utf8", str(SCRIPT), "task", str(self.run), "a", "running"]
-        children = [subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
-        results = [child.communicate(timeout=30) for child in children]
+        children = [self.processes.start(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
+        results = [self.processes.communicate(child, timeout=30) for child in children]
         self.assertEqual(sorted(child.returncode for child in children), [0, 2], results)
         self.assertEqual(self.state()["revision"], 4)
 
@@ -413,7 +415,7 @@ class PipelineTests(unittest.TestCase):
         definition = self.base / "plan.json"
         definition.write_text(json.dumps(plan(), ensure_ascii=False), encoding="utf-8")
         def cli(*args, success=True):
-            result = subprocess.run([sys.executable, "-X", "utf8", str(SCRIPT), *map(str, args)], capture_output=True, encoding="utf-8")
+            result = self.processes.run([sys.executable, "-X", "utf8", str(SCRIPT), *map(str, args)], capture_output=True, encoding="utf-8")
             self.assertEqual(result.returncode, 0 if success else 2, result.stderr)
             return result.stdout
         cli("init", run, "--title", "中文演示", "--demo")
@@ -464,7 +466,7 @@ class PipelineTests(unittest.TestCase):
         status, body, headers = request("/api/state")
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), self.state())
-        cli = subprocess.run([sys.executable, "-X", "utf8", str(SCRIPT), "status", str(self.run), "--json"], capture_output=True, check=True)
+        cli = self.processes.run([sys.executable, "-X", "utf8", str(SCRIPT), "status", str(self.run), "--json"], capture_output=True, check=True)
         self.assertEqual(json.loads(cli.stdout), json.loads(body))
         self.assertEqual(headers["X-Content-Type-Options"], "nosniff")
         self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])

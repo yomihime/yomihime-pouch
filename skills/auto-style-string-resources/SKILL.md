@@ -1,19 +1,31 @@
 ---
 name: auto-style-string-resources
-description: Audit, classify, rewrite, and batch-apply user-facing program text in a repository, including UI strings, i18n resources, README and documentation. Use for 整理字串, 统一文案风格, 风格化 UI 文案, 审计 i18n 文案, locating hardcoded display text, or improving product wording in Chinese, Japanese, or other languages. Inspect actual usage and preserve facts, risks, uncertainty, placeholders, and runtime contracts.
+description: Audit and refine repository UI strings, i18n resources, and user-facing docs against actual usage. Use for 字串审计 or 多语言文案风格统一; preserve meaning, placeholders, and runtime contracts.
 metadata:
-  version: "2026-11-03T15:38:00Z"
+  tags: "ui-copy"
+  author: "yomihime（如月怜） <evenia@evenia.moe>"
+  version: "1.0.0"
+  updated_at: "2026-11-04T18:35:49Z"
 ---
 
-# Auto Style String Resources
+# Auto Style String Resources / 程序文案风格
 
-## 目标
+<a id="触发示例与运行要求"></a>
+
+## Prerequisites / 触发示例与运行要求
+
+- 使用："审计这个仓库的 UI 字串，给出统一语气的候选"；"检查 i18n 文案和调用位置，保留占位符"。
+- 不使用："翻译这句聊天消息"；"调整按钮颜色和间距"；"重构 JSON 配置键"。独立翻译、视觉布局和机器字段改造不属于文案资源审计。
+- 两个辅助脚本仅用 Python 标准库。完整扫描能力需要 **Python 3.8+**：Python 字串识别依赖 3.8 起统一的 `ast.Constant` 节点；注解已延迟求值，不因 `list[str]` / `| None` 的写法单独要求 3.10。该下限来自代码与 API 核对，未在 3.8 解释器实测。扫描目标 Python 源码时，应使用能解析其语法的解释器，否则文件会被报告为解析失败。
+- 本轮 CLI 烟测环境为 Linux x86_64、Python 3.12.14 / 3.13.5；macOS、Windows 未实测。脚本不依赖 shell 专用命令，按平台选择实际解释器路径，并使用能显示 UTF-8 的终端。没有 Python 时仍可人工审计，不能声称已运行脚本。
+
+## Purpose / 目标
 
 用于整理程序中的用户可见文字，包括按钮、标签、提示、空状态、警告、错误、导入/导出说明、README 和 docs。先审计资源与实际调用场景，再从用户输入、项目文档、较好的现有文案和真实使用场景归纳风格，按 `style_score` 和处理等级提出候选，并只在用户授权的范围内分批应用。
 
 目标是让文字清楚、自然，像熟悉产品的人写给用户的话，同时贴合项目的受众与场景。不要为了统一语气或缩短句子而改变事实、确定性、必要条件、限制、警告和后果。代码或外部系统依赖的字段、占位符及其他契约必须保留。中文和日文都应按各自语言的自然习惯表达，不逐字套用另一语言的句式。
 
-## 默认行为
+## Scope and Default Behavior / 适用边界与默认行为
 
 - 用户只说“整理字串”“统一文案风格”“风格化 UI 文案”时：只做审计、归类、`style_score`、处理等级和 before/after 示例，不直接修改文件。用户明确要求修改且授权了范围时，按该范围执行；下列需要确认的保护项仍须先确认。
 - 用户说“自动处理低风险项”时：只修改低风险且明确标记为“可自动改写”的字串。
@@ -125,7 +137,7 @@ metadata:
 - 硬编码 UI 文案若适合迁移到 i18n，先把迁移列为“只整理不改写”或单独候选，不在文案风格批次中顺手改调用结构。
 - 不调整控件结构、布局、信号槽、业务逻辑、线程、导出字段映射或知识库结构。
 
-### 7. 验证与汇报
+### 7. Validation and Reporting / 验证与汇报
 
 修改后输出已改文件和范围、before/after 清单、每项 `style_score` 与处理等级、必要说明、跳过项及原因、已知风险和仍需确认的文案。常规低风险项不逐条写理由。
 
@@ -137,12 +149,19 @@ metadata:
 
 审计阶段使用“位置、场景、当前文本、style_score、处理等级、建议”的表格或紧凑分组。应用后提供“位置、Before、After、style_score、处理等级”。表格过长时按页面或风险等级拆分；完整清单可写入用户确认的临时审计文档，不要把大型一次性清单塞进 `AGENTS.md`。
 
-## 可选工具脚本
+## Available Scripts / 可选工具脚本
 
 脚本只辅助初筛和约束检查，不能替代人工理解调用上下文。
 
-- `scripts/draft_string_tree.py`：粗扫根目录 `i18n/*.json` 和 `gui/`、`core/`、`utils/` 中的部分 Python 字串，推断页面与分组。它可能漏掉动态构造、其他路径、框架、语言和文档，也可能误报技术字串；解析失败的文件会被跳过。`--locale` 按资源文件名筛选，可重复指定；不指定时扫描这些目录下的所有 locale。输出必须人工核验。
-- `scripts/check_string_constraints.py`：用正则比较常见占位符、HTML 标签、Markdown 链接、快捷键、路径和错误码。覆盖并不完整，可能误报或漏报；它比较匹配项及其出现次数，不验证位置参数的顺序，也不独立解析命令、转义序列或所有占位符语法。通过不证明所有契约或含义保持不变。脚本报错时保护原字串并人工检查。
+- `scripts/draft_string_tree.py`：粗扫根目录 `i18n/*.json`、`i18n/*.jsonl` 和 `gui/`、`core/`、`utils/` 中的部分 Python 字串，推断页面与分组。它可能漏掉动态构造、其他路径、框架、语言和文档，也可能误报技术字串。`--locale` 按资源文件名筛选，可重复指定；不指定时扫描这些目录下的所有 locale。输出必须人工核验。
+- `scripts/check_string_constraints.py`：用正则比较常见占位符、HTML 标签、Markdown 链接、快捷键、路径和错误码。覆盖并不完整，可能误报或漏报；它比较匹配项及其出现次数，不验证位置参数的顺序，也不独立解析命令、转义序列或所有占位符语法。通过不证明所有契约或含义保持不变。
+
+### Troubleshooting / 失败处理
+
+- `draft_string_tree.py`：读取或解析失败时向 stderr 报告文件诊断和汇总，失败文件不输出候选；JSONL 按非空行解析 JSON，坏行报行号并拒绝该整个文件。退出码 0 表示扫描范围内完整成功（包括有效空项目），1 表示部分成功并输出成功文件候选，2 表示根目录错误或全部失败。非零退出码不能报告为完整审计；先核对诊断，再补查或修复输入。
+- `check_string_constraints.py`：脚本报错时保护原字串并人工检查；检查通过也不代替上下文与语义核验。
+
+### CLI Examples / CLI 示例
 
 从技能安装目录调用脚本，例如：
 

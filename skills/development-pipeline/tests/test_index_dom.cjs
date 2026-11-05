@@ -20,7 +20,8 @@ class Element {
  setAttribute(k,v){this.attributes[k]=String(v);}getAttribute(k){return this.attributes[k]??null;}
  addEventListener(type,fn){this.listeners[type]=fn;}click(){this.listeners.click?.({target:this});}focus(){document.activeElement=this;}
 }
-Object.defineProperty(Element.prototype,'innerHTML',{set(){throw Error('Unexpected unsafe HTML sink')}});
+for (const sink of ['innerHTML', 'outerHTML']) Object.defineProperty(Element.prototype,sink,{set(){throw Error('Unexpected unsafe HTML sink')}});
+Element.prototype.insertAdjacentHTML = () => {throw Error('Unexpected unsafe HTML insertion')};
 // Keep this intentionally small: the real HTML hooks above and JS behavior below
 // are checked, but this is not a replacement for Chromium or accessibility QA.
 const ids={};for(const name of ['active-count','archive-count','attention-count','results','notice','search','list','count','theme'])ids[name]=new Element();
@@ -28,7 +29,7 @@ const tabs=['active','archive','unknown','all'].map(key=>{const b=new Element('b
 const tabList=new Element();const body=new Element('body');let timer, delay;
 const document={body,createElement:t=>new Element(t),getElementById:id=>ids[id]??body.children.find(x=>x.id===id),querySelector:s=>s==='.tabs'?tabList:ids[s.slice(1)],querySelectorAll:s=>s==='.tab'?tabs:[]};
 const context={document,window:{},Date,setInterval:(fn,ms)=>{timer=fn;delay=ms}};
-vm.runInNewContext(fs.readFileSync(root+'/app.js','utf8'),context);
+vm.runInNewContext(fs.readFileSync(root+'/app.js','utf8'),context,{timeout:1000});
 assert.equal(delay,5000);assert.equal(body.children.length,1);assert.match(body.children[0].src,/^\.\/pipeline-index-data\.js\?t=/);
 body.children[0].onerror();assert.match(ids.notice.textContent,/无法读取/);
 tabs[1].click();assert.equal(ids.results.getAttribute('aria-labelledby'),'tab-archive');assert.equal(tabs[1].getAttribute('aria-selected'),'true');
