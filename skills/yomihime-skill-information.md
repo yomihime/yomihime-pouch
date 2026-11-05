@@ -71,9 +71,51 @@ skills/
 ### 真实运行要求
 
 - 架构渲染与流水线 helper：Python 3.9+，仅标准库。字串完整扫描：Python 3.8+，仅标准库。这是代码/API 下限核对，不是最低版本实机测试证明。
-- 历史候选在 Linux x86_64、Python 3.12.14 和 3.13.5 上的 18 次 CLI 烟测全部通过；历史回归使用 Python 3.12。本轮原生 Windows 的部分通过、失败与跳过见下文，不据此承诺完整平台支持。Python 3.8/3.9 与 macOS 仍未实测。
+- 历史候选在 Linux x86_64、Python 3.12.14 和 3.13.5 上的 18 次 CLI 烟测全部通过；历史回归使用 Python 3.12。本机 Windows 的修复回归、跳过与历史失败见下文，不据此承诺完整平台支持。Python 3.8/3.9 与 macOS 仍未实测。
 - planning、multi-agent、memory、UI 四个技能是文档指导，使用时不需要 Python。init 的指导可独立使用；可选 helper 使用 Python 3.10+ 标准库。纯版本值比较不依赖 POSIX，也不读取目录或给出安装决定；完整目录检查另需 POSIX no-follow 文件描述符能力。原生 Windows 的目录检查明确退出码 2、需人工或宿主工具核验，不使用不安全回退；原生 Windows、macOS 与 Python 3.10 最低版本均未实测。浏览器交互需 JavaScript；Node DOM 测试为可选开发验证，不是用户使用文档技能的先决条件。
 - 测试子进程使用最小环境与超时。浏览器测试默认显式启用 Chromium sandbox；只有明确声明的隔离 Linux 容器测试才有受控例外，启动失败不自动降级。
+
+## Windows 失败根因修复与复核（2026-11-05，dc92328）
+
+本节更新初次本机回归的 **3 个失败、2 个错误**，最终技能候选为 **`dc923280aff171575bd9e576e10c581234bcf8c7`**。先逐项复现并保留五份原始堆栈，再修复确定的实现或测试缺陷。相关脚本、helper 与测试的 Git blob 在移植前 main `885a9cf` 和初次 PR head `01bbfdc` 相同，证明这些问题原已存在；是否修复仍依据实际根因和验收影响，不仅依据文件是否被本次移植改动。
+
+### 五项定位与分类
+
+下表行号和堆栈对应修复前 `01bbfdc`，避免把旧行号误当作最新代码位置。文案三项位于 `skills/auto-style-string-resources/tests/test_string_helpers.py`，索引项位于 `skills/development-pipeline/tests/test_pipeline_index.py`。
+
+| 精确测试 | 原始堆栈或断言 | 根因与修复 |
+| --- | --- | --- |
+| `DraftTreeTests.test_locale_filter_nested_json_and_unicode` | `test_string_helpers.py:109`：`'i18n\zh_CN.json' != 'i18n/zh_CN.json'` | `collect_i18n` 用 `str(path.relative_to(root))`，产生平台相关分隔符；改为 `as_posix()` |
+| `DraftTreeTests.test_python_scan_is_a_draft_not_a_complete_ui_or_docs_audit` | `test_string_helpers.py:141`：`all(source == 'gui/pages/home.py')` 为假 | `VisibleStringVisitor.visit_Constant` 用 `str(rel)`；改为 `rel.as_posix()` |
+| `DraftTreeTests.test_jsonl_parses_multiple_records_and_reports_physical_lines` | `test_string_helpers.py:219`：`all(source == 'i18n/zh.jsonl')` 为假 | 与第一项同一 i18n 输出缺陷，JSONL 解析内容和物理行号已通过；不放松 `/` 路径断言 |
+| `SubprocessSafetyTests.test_platform_environment_preserves_only_explicit_allowlist` | `test_string_helpers.py:316`：`env['SystemRoot']` 抛出 `KeyError` | Windows 的 `os.environ` 将键规范化为 `SYSTEMROOT`，helper 仍正确保留白名单项；修正测试的大小写假设，不改生产过滤逻辑 |
+| `ProjectIndexTests.test_untrusted_text_and_local_urls_cannot_escape_data_script` | `test_pipeline_index.py:465 → pipeline.mutate:419 → locked:113 → pathlib.mkdir`：`WinError 123` | 测试目录 `quote # % ? <x>` 含 Windows 禁止字符，在进入注入/链接断言前已失败；使用本机可表示的目录名，保留恶意标题和编码检查 |
+
+前三项是**同一个跨平台实现缺陷的三处表现**，涉及两处实际输出代码；后两项是**测试的平台假设缺陷**。不是权限不足或外部系统配置错误。三个输出差异会使 Windows 与其他平台的来源定位格式不一致；两个测试错误会阻止安全边界断言真正执行。这些问题未改变本次新增主计划/交接文档的逻辑，却影响技能集合的 Windows 输出与本机全仓验收，故纳入本 PR 修复。
+
+### 保留的安全覆盖
+
+- 环境 helper 原 allowlist 未改。测试覆盖三种 SystemRoot 拼写，加入混合大小写的秘密/PYTHONPATH，要求输出键集合恰好等于允许项及两个固定 Python 设置。另用完全合成的环境确认 Windows 实际键为 `SYSTEMROOT`，两种大小写查询均可用，没有输出真实环境。
+- 索引测试保留 `</script><img ... onerror=...>`、Unicode 分隔符、无闭合脚本注入及标题完整往返断言。Windows 路径保留空格、`#`、`%`、Unicode；新增 `%20/%23/%25`、空 query/fragment 及解码回原路径的断言。POSIX 分支继续使用 `?<>` 并检查对应编码，没有把该测试改成 Windows skip。
+- 同类可选浏览器测试也改为平台可表示的夹具名，未更改浏览器 sandbox 或图片/脚本执行断言。该浏览器层仍未运行，不冒充已验证。
+- 两个受影响技能保留 `1.0.0` 候选并刷新真实更新时间；文案技能明确 `source` 使用 `/` 分隔的项目相对路径。未修改系统权限、用户配置、原有未跟踪目录或保留分支。
+
+独立新上下文审查者复核原始五份日志、五文件差异及直接相关实现，未发现 Blocker/Important 或安全覆盖回退；审查者未运行测试，以下通过结果来自实际测试进程。
+
+### 修复后实际回归与静态检查
+
+同一原 checkout 完整重跑 **212 项 Python 测试：184 通过、0 失败、0 错误、28 跳过**；五个原失败测试均通过，文案 suite **35/35**，流水线 suite **61 项：57 通过、4 跳过**。三个 Node DOM suite 均通过。跳过数没有增加，保留 POSIX/no-follow、符号链接及可选浏览器缺口；不能据此声称所有平台、浏览器或安装事务通过。两个受影响技能的 quick_validate 通过，仓库元数据与引用契约也在上述完整回归中通过。
+
+按相同 **SkillEvaluator 0.7.2、external、默认配置、门槛 70、--no-llm** 重跑两个变更技能，输入绑定本节候选；其他六个技能未在本次根因修复后重新扫描，原报告保留原身份。
+
+| 技能 | QUALITY | 完整 Tier 1 |
+| --- | ---: | --- |
+| auto-style-string-resources | 93.5 | failed |
+| development-pipeline | 88.2 | failed |
+
+两项 Bandit/Gitleaks 均通过；SkillSpector partial、文案 E2/AR2、流水线任务前已有空缓存目录的 SC8 命中仍保留。单元测试修复不等于安全扫描整体通过。未删除缓存、降规则或隐藏失败。真实百炼行为评估、NVIDIA Tier 2/Tier 3 的认证和运行时条件仍未满足，本次没有新增评估器推理调用或 token；不沿用旧分数宣称这些层已通过。
+
+原始复现堆栈、最终全量日志、两项新 NVIDIA JSON/HTML 与候选回执保存在执行本机的仓库外目录 `C:/Users/eveni/AppData/Local/Temp/codex-planning-port-20261105-0130/windows-followup/`，不随 PR 发布。该目录中的 `before-results.json`、`regressions/results.json`、`fix-receipt.json`、`static-summary.json` 区分修复前失败、修复后执行和静态报告身份。下节初次移植结果作为历史保留，不代表当前 Windows 回归状态。
 
 ## 规划与交接语义移植及本机复核（2026-11-05）
 
