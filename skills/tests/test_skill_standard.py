@@ -72,5 +72,62 @@ class SkillStandardTests(unittest.TestCase):
                         self.assertNotIn(legacy, content)
 
 
+
+    def test_multi_agent_entry_states_the_current_run_failure_barrier(self):
+        # Static contract: this does not prove a runtime obeys the barrier.
+        text = (SKILLS / 'multi-agent-engineering' / 'SKILL.md').read_text(encoding='utf-8')
+        entry = text.split('## 触发示例与运行要求', 1)[0]
+        for pattern in (
+            r"当前 run.*禁止在该 run 启动新工作或放行下游",
+            r"未受影响的就绪任务也不例外",
+            r"needs_decision.*consulting.*blocked.*在途任务.*真实终态.*候选.*证据",
+            r"接收结果不解除失败或已有决策状态",
+        ):
+            with self.subTest(pattern=pattern):
+                self.assertRegex(entry, re.compile(pattern, re.S))
+
+    def test_multi_agent_routes_coordination_before_dispatch_and_recovery(self):
+        root = SKILLS / 'multi-agent-engineering'
+        text = (root / 'SKILL.md').read_text(encoding='utf-8')
+        route = next(line for line in text.splitlines()
+                     if line.startswith('- [调度与工作区](references/coordination.md)'))
+        self.assertTrue((root / 'references' / 'coordination.md').is_file())
+        for condition in ('首次调度前', '任务失败', '在途结果接收', '返回/阻塞决策'):
+            with self.subTest(condition=condition):
+                self.assertIn(condition, route)
+
+
+    def test_task_handoff_keeps_assignment_and_ready_separate_from_authorization(self):
+        root = SKILLS / 'multi-agent-engineering'
+        text = (root / 'references' / 'task-cards.md').read_text(encoding='utf-8')
+        for pattern in (
+            r"主调度者.*任务 owner、结果接收者与验收职责.*identity/goal/outputs.*不新增强制字段",
+            r"角色名不能代替任务定义.*主计划、任务包和知识摘录都不增加权限",
+            r"相关章节、全部适用约束.*候选/dirty 基准.*允许动作.*run/attempt.*失败、顾问或阻塞状态",
+            r"ready 只表示本任务输入与权限就绪.*当前 run 无未解决失败、轮次已开放且依赖已接收",
+        ):
+            with self.subTest(pattern=pattern):
+                self.assertRegex(text, re.compile(pattern, re.S))
+
+    def test_revised_task_inputs_keep_old_identity_and_current_run_failure(self):
+        root = SKILLS / 'multi-agent-engineering' / 'references'
+        cards = (root / 'task-cards.md').read_text(encoding='utf-8')
+        self.assertRegex(cards, re.compile(r"旧输入的结果保留原版本、候选与证据.*适用性.*复用或重验", re.S))
+        self.assertIn("新 input-version 不解除当前 run 的失败、顾问或阻塞状态，也不扩大允许动作", cards)
+        self.assertRegex(cards, re.compile(r"旧 owner 的停写/交回和在途操作.*新 owner 的准确范围.*通知不等于转移完成", re.S))
+        coordination = (root / 'coordination.md').read_text(encoding='utf-8')
+        self.assertIn("更新计划/input-version 不解除当前 run 的失败或既有决策状态", coordination)
+
+    def test_knowledge_and_pipeline_handoff_keep_result_acceptance_and_write_scope(self):
+        memory = (SKILLS / 'project-memory' / 'references' / 'collaboration.md').read_text(encoding='utf-8')
+        self.assertIn("知识摘录只提供有来源的上下文，不授予源码或外部动作权限", memory)
+        self.assertIn("记忆 writer 只在获配记忆范围内归并已接收事实", memory)
+        for field in ('source:', 'scope:', 'constraints:', 'facts:', 'freshness:', 'gaps:'):
+            self.assertIn(field, memory)
+        pipeline = (SKILLS / 'development-pipeline' / 'SKILL.md').read_text(encoding='utf-8')
+        self.assertRegex(pipeline, re.compile(r"主调度者负责分派和结果接收.*JOB 的 owner、产物接收者与验收职责", re.S))
+        self.assertIn("执行者只在获配任务和写入/动作范围内交付", pipeline)
+        self.assertIn("记忆维护职责只归并已接收事实", pipeline)
+
 if __name__ == '__main__':
     unittest.main()

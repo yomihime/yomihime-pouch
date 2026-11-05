@@ -7,7 +7,7 @@ description: >-
 metadata:
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-05T01:34:32Z"
+  updated_at: "2026-11-05T02:48:56Z"
 ---
 
 # Interactive Planning Doc
@@ -213,9 +213,11 @@ plan into a procedural checklist. Milestones can still be numerous and detailed.
 
 ### 6. Design Commit Cadence Separately
 
-Do not default to one giant commit or one commit per milestone.
-
-Group commits by coherent review stages:
+Design commit cadence only when it is actually needed, such as when the user
+requests commit groups or staged review is useful. Otherwise omit this step;
+a complete main plan does not require arranging commits. When needed, group by
+coherent review boundaries rather than defaulting to one giant commit or one
+commit per milestone:
 
 - Responsibility or page boundary changes.
 - Data model and storage boundary.
@@ -354,6 +356,19 @@ Distinguish revisions affecting requirements, contracts, acceptance, or permissi
 and separate document completion, handoff readiness, authorization, implementation,
 and verified behavior. Core open items block their dependent scope without
 bypassing existing round or failure barriers.
+
+When delegating, the coordinator owns the valid main plan, task assignment, and
+result acceptance, identifying the task owner and result recipient/acceptance
+responsibility. Writing the plan does not grant implementation, shared-file, or
+external-action permission. Supply relevant REQ/sections, all applicable
+constraints, candidate/dirty baseline, ready dependencies, allowed actions,
+current run/attempt and failure/blocking state when a pipeline is used, and
+evidence entry points; do not send the whole plan or chat by default. The receiver
+checks valid inputs, actual directory, and permission, resolving gaps by impact.
+Before transferring write rights, reconcile the old owner's stopped writes/return
+of rights and define the new scope. Old-input results retain their identity;
+check applicability before reuse or retesting. Updating the plan revision does
+not lift an existing failure barrier.
 
 These skills are optional; the current thread can perform their responsibilities
 without installing skills or starting a team:

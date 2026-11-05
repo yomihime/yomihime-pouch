@@ -8,7 +8,7 @@ metadata:
   tags: "engineering-workflow"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-05T01:55:46Z"
+  updated_at: "2026-11-05T02:48:56Z"
 ---
 
 # 开发流水线 / Development Pipeline
@@ -87,6 +87,8 @@ python3 skills/development-pipeline/scripts/pipeline.py status .agent-workspace/
 失败回原责任范围：实现缺陷回原实现者，契约冲突回 owner 与主调度者，环境问题处理环境，关键假设失败或无进展请顾问。只重验受影响证据，复用必须说明适用性；不默认从头重跑、固定修复轮数或逐次续批。
 
 ## 任务与记忆衔接
+
+主调度者负责分派和结果接收，明确各 JOB 的 owner、产物接收者与验收职责。执行者只在获配任务和写入/动作范围内交付候选、自检、证据及缺口；测试/审查职责报告实际验证，记忆维护职责只归并已接收事实，不能以计划、任务完成或阶段推进扩大权限。复用现有角色和任务包，短任务可由当前线程顺序完成，独立性按实际要求保留。
 
 - 主调度者将阶段/里程碑、layer、slice、round/wave、检查点、验收与候选关联到任务。使用 multi-agent-engineering 时生成 task-handoff-v1，并附本任务相关的这些字段及流水线运行目录/节点 ID；不把全部流水线历史交给子 Agent。
 - 用 project-memory 的 knowledge-extract-v1 提取相关事实、地图与图纸，连同需求、验收、权限和基线形成可开工输入。测试、审查、维护、cleaner 等角色仍需其必需环境或原始材料，地图不能补足这些缺口。
