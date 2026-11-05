@@ -5,7 +5,7 @@ metadata:
   tags: "project-state"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T17:20:31Z"
+  updated_at: "2026-11-05T01:30:50Z"
 ---
 
 # 项目工程记忆 / Project Memory

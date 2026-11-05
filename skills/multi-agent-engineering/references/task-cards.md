@@ -8,19 +8,21 @@
 protocol: task-handoff-v1
 identity: work-id / job-id / instance-id / input-version / role
 pipeline: 按需关联 REQ、milestone、slice、layer、round/wave、检查点、运行目录/节点 ID、本任务验收与证据
-goal: REQ 来源、目标、非目标、预期产物、可观察验收
+goal: REQ 来源、目标、非目标、预期产物、可观察验收；有主计划时引用相关 REQ/章节
 constraints: 有效用户要求、权限与数据边界、不得改变的行为
 baseline: 主仓库与主 checkout 绝对路径、候选、相关 staged/unstaged/untracked 基准；跨仓库确需共享 worktree 时另列其可见路径与原因
 knowledge: 相关已核验事实、来源与范围；假设和未知分开
 maps: 相关地图/图纸路径与章节/符号、基准、现状或目标及确认状态
 architecture: 可选；稳定入口、唯一架构源路径/章节、修订/基准、现状或目标与确认状态、本任务范围、writer/交接接收者；按需引用视图与契约，不复制另一份图源
-dependencies: 已就绪契约版本、输入、上游/下游任务；未就绪项
+dependencies: 已就绪契约版本、输入、上游/下游任务；主计划可执行范围及相关未决项
 access: 可读范围、互不重叠的文件写入范围、共享文件和资源 owner、允许动作
 outputs: 报告与证据位置、所需验证、停止/交接条件
 resources: 已知模型/effort/速度及生效证据或未知、容量与用户硬限制
 ```
 
 字段按任务取舍，但目标、验收、约束、基线、操作范围和角色必需材料不能省略。精确路径/符号加必要事实通常足够，不默认附整个对话、全部地图、全仓文件或日志。地图不是路径白名单：允许为当前问题补读必要直接依赖，但不得借补读扩大写入或数据权限。
+
+主计划信息复用既有 goal/baseline/dependencies 字段，baseline 给路径与有效修订，不新增必需协议字段。子任务只需相关章节、全部适用约束及跨域不变量；修订影响契约/验收时，协调者更新 input-version 并通知 owner，核对在途结果和写入权后接续。计划完整不自动代表任务就绪或获准实施。
 
 architecture 是可选产物引用，不改变 task-handoff-v1 的必需条件，也不要求额外文件或安装 `architecture-design`；已有 maps/计划能准确承载时直接复用。引用须区分已核验现状、目标方案与待证假设，架构视图不能代替代码和运行证据。跨任务图纸复用现有有效源；无源时才按需使用 `.agent-workspace/architecture/`，由已有 `AGENTS.md` 或 `memory/current.md` 入口指向同一源，不另造 project-memory 副本。交接核对入口可访问、修订与状态一致、writer 已移交，并列出必须保留的图源、仍被引用的依据和视图；清理任务目录不得删除它们，不擅自迁移或覆盖。
 

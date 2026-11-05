@@ -8,7 +8,7 @@ metadata:
   tags: "delegation"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T12:23:38Z"
+  updated_at: "2026-11-05T01:30:50Z"
 ---
 
 # 多 Agent 工程协作 / Multi-Agent Engineering

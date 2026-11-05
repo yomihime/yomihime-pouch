@@ -21,7 +21,7 @@
 
 | 名称 | 用途 | 文档 |
 | :--- | :--- | :--- |
-| 🧭 **Interactive Planning Doc** | 把交互式讨论整理成可执行计划文档。 | [查看文档](./skills/interactive-planning-doc/) |
+| 🧭 **Interactive Planning Doc** | 前置调查、集中关键澄清，尽早形成完整可交接的主计划。 | [查看文档](./skills/interactive-planning-doc/) |
 | 🧵 **Auto Style String Resources** | 审计、归类并分批风格化程序字串和 UI 文案。 | [查看文档](./skills/auto-style-string-resources/) |
 | 🏗️ **Development Pipeline** | 需求切片、顺序轮次与轮内并行，检查点验收和实时观察网页。 | [查看文档](./skills/development-pipeline/) |
 | 🛠️ **Multi-agent Engineering** | 按任务选择模型，协调小切片实现、独立审查与验证。 | [查看文档](./skills/multi-agent-engineering/) |

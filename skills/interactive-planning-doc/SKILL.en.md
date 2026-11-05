@@ -1,19 +1,22 @@
 ---
 name: interactive-planning-doc
 description: >-
-  Create or revise engineering plans through discussion, with milestones,
-  validation and acceptance criteria. Use before implementation, not for coding.
+  Turn engineering goals into a complete, handoff-ready main plan early through
+  upfront investigation and focused clarification. Use for feature, architecture,
+  refactor or release planning; skip pure execution of a complete plan and small fixes.
 metadata:
   author: "yomihime（如月怜） <evenia@evenia.moe>"
   version: "1.0.0"
-  updated_at: "2026-11-04T17:20:31Z"
+  updated_at: "2026-11-05T01:34:32Z"
 ---
 
 # Interactive Planning Doc
 
-Use this skill to turn an evolving product or engineering discussion into a
-clean plan document that another agent can execute later. Keep the document
-practical, specific, and free of conversational noise.
+Turn engineering goals into one main plan another executor can use. The default
+flow is upfront investigation → focused clarification → complete first draft →
+next-executor check → handoff baseline. Aim to produce the whole plan early,
+without chapter-by-chapter drafting or approval across chat turns. This does not
+limit necessary questions, internal drafts, write calls, or later revisions.
 
 ## Trigger Examples and Runtime Requirements
 
@@ -23,15 +26,22 @@ practical, specific, and free of conversational noise.
 
 ## Ground Rules
 
-- Treat the user's latest message as the current source of truth.
+- Use the user's latest message for goals and preferences; retain earlier valid
+  decisions. Current source, actual candidates, and raw evidence establish
+  implemented/verified facts. A target design is not current behavior.
 - If the user says "docs only", "no code changes", or equivalent, do not edit
   implementation files.
 - Prefer editing one planning document over scattering decisions across files.
 - Read existing project guidance before writing claims about the codebase.
 - Use current code and stable architecture docs as facts; treat roadmaps and old
   plans as lower-priority references.
-- Ask only focused questions that block a safe plan. Make reasonable assumptions
-  when the risk is low and mark them as assumptions.
+- Investigate engineering facts and choose ordinary reversible local approaches
+  autonomously. Ask about goals, experience, scope, success criteria, or material
+  tradeoffs that need the user. State defaults, recheck triggers, and failure
+  impacts for low-impact conditions.
+- Stop at the plan for docs-only requests. Preserve existing implementation
+  authorization at handoff without inventing whole-document approval. A plan
+  does not authorize commits, pushes, installation, publication, or deletion.
 - If the user provides a URL, external schema, standard, release rule, or
   current project status that may have changed, verify it from the source before
   writing precise claims.
@@ -117,9 +127,29 @@ Read the smallest set of files needed to avoid writing fiction:
 - External docs only when the plan depends on external formats, APIs, versions,
   release rules, or current upstream status.
 
-Record conflicts explicitly instead of silently choosing a side.
+With project-memory, the coordinator restores the full current snapshot before
+extracting relevant facts, code entry points, and drawings. Maps do not replace
+fact checks; without maps, investigate the bounded problem rather than requiring
+a repository-wide scan. Separate verified facts, user decisions, AI choices,
+conditions/assumptions, and unknowns, with sources and relevant source/dirty
+baselines. Investigate researchable questions instead of asking the user to
+research the code. Record conflicts and the basis for resolving them.
 
-### 3. Keep a Decision Ledger
+### 3. Clarify Decisions and Keep a Decision Ledger
+
+Ask obvious missing core goals early while continuing independent investigation.
+Group independent questions by topic; resolve upstream decisions first when later
+choices depend on them. As useful, give the current understanding, a few distinct
+options, impacts, and a recommendation with reasons. Allow free-form answers;
+do not reconfirm settled decisions or permissions. There is no fixed question
+count or number of clarification rounds.
+
+If a core question is unanswered, retain it and its impact. A complete draft may
+include it, but the affected scope is not executable. Silence, timeout, and a
+preselected option are not consent. Do not assume away conflicting core goals,
+key business semantics, success criteria, irreversible data handling, compatibility
+commitments, required permissions, or critical feasibility facts. Investigate
+factual gaps; ask the user about intent and permission.
 
 As the user answers questions, move decisions into a stable section such as
 `已确认决策` or `Confirmed Decisions`.
@@ -133,7 +163,13 @@ Each decision should state:
 Remove agent-side uncertainty, discarded options, and chat history from the
 execution-facing plan unless they explain a remaining risk.
 
-### 4. Shape the Document for Future Execution
+### 4. Produce a Complete Main Plan Early
+
+Read and adapt the [plan template](assets/plan-template.md). AI fills and trims it
+in the user's language, removing irrelevant sections and placeholders; do not
+turn it into a chapter-by-chapter questionnaire. Retain necessary placeholders
+only for an explicitly requested empty framework. A complete draft covers the
+agreed scope, but does not mean every part is ready or authorized for execution.
 
 A strong planning document usually includes:
 
@@ -157,8 +193,10 @@ Omit sections that do not help a future implementation agent.
 
 ### 5. Write Milestones, Not Vague Intent
 
-Use many small milestones when risk is high. A milestone should be narrow enough
-that an executor can tell whether it is complete.
+Use verifiable capability outcomes when risk is high. State direct dependencies.
+Cover all goals and acceptance upfront for large work; make near-term scope
+dispatchable and name triggers for elaborating distant details, rather than
+inventing file-level implementation.
 
 For each milestone, prefer:
 
@@ -197,7 +235,10 @@ convention.
 Keep development milestones inside the development plan. Documentation updates
 are development work when they document implemented behavior.
 
-Post-acceptance cleanup starts only after:
+Tailor completion to the agreed endpoint and risks; design commit groups only
+when useful. Require user trials, UI changes, installation, or publication only
+when applicable. If the agreed scope includes user trials and post-acceptance
+cleanup, begin after the applicable conditions hold:
 
 - All planned milestones are implemented.
 - The user has tested the feature.
@@ -270,12 +311,18 @@ Make self-review happen before each commit group and once before user acceptance
 
 ### 10. Iterate Cleanly
 
-When the user changes a decision:
+When decisions, requirements, evidence, or actual omissions change, the
+coordinator identifies affected scope and reconciles in-flight results and write
+rights. A single writer revises the main plan:
 
 - Update the canonical section of the document.
 - Remove stale text that contradicts the new decision.
 - Check related milestones, commit groups, cleanup, and validation sections.
-- Summarize the document change briefly.
+- Update the plan revision, affected task input-version, slices/maps, and evidence
+  applicability; notify owners. Unaffected work follows existing scheduling rules;
+  a failed pipeline still prohibits new work.
+- Summarize the change briefly. Ordinary defects return to their development
+  scope instead of reopening the user requirements questionnaire.
 
 When the user asks to commit, amend, or push, verify the specific files authorized
 for publication and check for sensitive information. Include only the intended
@@ -299,47 +346,45 @@ in the discussion:
 If anything is vague, edit the plan directly or ask the smallest necessary
 question.
 
-## Minimal Template
+## Handoff Baseline and Optional Skill Connections
 
-```markdown
-# <Plan Title>
+Identify the plan by a lightweight revision and relevant source/dirty baseline.
+State executable scope, concrete blockers, endpoint, and permitted actions.
+Distinguish revisions affecting requirements, contracts, acceptance, or permission,
+and separate document completion, handoff readiness, authorization, implementation,
+and verified behavior. Core open items block their dependent scope without
+bypassing existing round or failure barriers.
 
-> This document is an execution plan. It does not prove implementation status.
+These skills are optional; the current thread can perform their responsibilities
+without installing skills or starting a team:
 
-## 1. Scope
+- **development-pipeline** consumes the same plan to derive REQ → M → SL → JOB,
+  dependencies, rounds, and checkpoints. A complete main plan and gradual observer
+  rendering are independent: submit definitions progressively or import together,
+  while retaining start validation. Investigation, clarification, and milestones
+  do not automatically correspond to execution rounds.
+- **multi-agent-engineering** retains task-handoff-v1. Existing goal/baseline/
+  dependencies reference the plan path, revision, relevant REQ/sections, ready
+  scope, and open items. Include cross-domain invariants, role materials,
+  candidate, directory, and write rights. Subtasks need only relevant sections,
+  not the entire plan. No permanent planning role or mandatory protocol field
+  is added.
+- **project-memory** supplies sourced facts, entry points, and drawings through
+  knowledge-extract-v1. Integrate accepted decisions and facts using its existing
+  maintenance protocol. current.md retains recovery-critical goals, constraints,
+  actual state, and the plan path/revision, without duplicating the plan/task table
+  or presenting targets and planned checks as implemented/verified facts.
 
-## 2. Non-Goals
+Observer return resets attempts, not topology. To add/remove nodes or change
+rounds, coordinate in-flight tasks, collect real results, and preserve stop points.
+Create an independent run for the revised remaining scope, referencing the old run
+with applicable evidence. Preserve the old run's true state, do not force completed
+or automatically inherit passed, and do not expand permission or reset user limits.
 
-## 3. Confirmed Decisions
+## Plan Template
 
-## 4. Current State and Target State
-
-## 5. Data and Persistence
-
-## 6. UI and Workflow
-
-## 7. Code Structure
-
-## 8. Milestones
-
-### M01: <specific milestone>
-
-Deliverable:
-
-- ...
-
-Acceptance:
-
-- ...
-
-## 9. Validation and Self-Review
-
-## 10. Commit Groups
-
-## 11. Post-Acceptance Cleanup
-
-## 12. Open Questions
-```
+Read [assets/plan-template.md](assets/plan-template.md) as needed when producing or
+revising the first draft. Reuse the project's main plan without a parallel authority.
 
 ## Output Quality Checklist
 

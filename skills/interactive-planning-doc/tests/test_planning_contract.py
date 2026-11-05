@@ -111,5 +111,38 @@ class PlanningContractTests(unittest.TestCase):
             self.english, r"commit, amend, or push", r"authorized\s+for publication", r"preserve unrelated user or concurrent edits"))
 
 
+
+    def test_complete_draft_does_not_grant_execution_or_consent(self):
+        # Documentation contracts only; these do not simulate agent behavior.
+        for value, patterns in (
+            (self.chinese, (r"完整.*不代表.*就绪.*获准实施", r"沉默、超时.*不代表同意",
+                            r"已有实施授权.*沿用.*不新增.*审批")),
+            (self.english, (r"complete draft.*not mean.*ready or authorized",
+                            r"Silence, timeout.*not consent",
+                            r"Preserve existing implementation.*without inventing.*approval")),
+        ):
+            for pattern in patterns:
+                with self.subTest(pattern=pattern):
+                    self.assertRegex(value, re.compile(pattern, re.I | re.S))
+
+    def test_template_is_installed_and_keeps_readiness_separate_from_goals(self):
+        template = read("assets/plan-template.md")
+        for text in (self.chinese, self.english, self.readme):
+            self.assertIn("assets/plan-template.md", text)
+        for field in ("修订", "依据", "允许动作", "可执行范围", "未决", "验收", "接手入口"):
+            with self.subTest(field=field):
+                self.assertIn(field, template)
+        self.assertIn("不代表已实现或已验证", template)
+
+    def test_handoff_and_observer_changes_preserve_existing_protocols(self):
+        for text in (self.chinese, self.english):
+            for protocol in ("task-handoff-v1", "knowledge-extract-v1", "input-version"):
+                with self.subTest(protocol=protocol):
+                    self.assertIn(protocol, text)
+        self.assertRegex(self.chinese, r"return.*不改变拓扑")
+        self.assertRegex(self.english, r"return resets attempts, not topology")
+        self.assertIn("不自动继承 passed", self.chinese)
+        self.assertIn("not force completed", self.english)
+
 if __name__ == "__main__":
     unittest.main()
