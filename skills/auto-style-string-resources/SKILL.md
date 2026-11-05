@@ -4,8 +4,8 @@ description: Audit and refine repository UI strings, i18n resources, and user-fa
 metadata:
   tags: "ui-copy"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
-  version: "1.0.0"
-  updated_at: "2026-11-05T01:55:46Z"
+  version: "1.0.1"
+  updated_at: "2026-11-05T04:30:20Z"
 ---
 
 # Auto Style String Resources / 程序文案风格

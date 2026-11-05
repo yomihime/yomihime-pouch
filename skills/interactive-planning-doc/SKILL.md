@@ -6,8 +6,8 @@ description: >-
 metadata:
   tags: "engineering-plans"
   author: "yomihime（如月怜） <evenia@evenia.moe>"
-  version: "1.0.0"
-  updated_at: "2026-11-05T02:48:56Z"
+  version: "1.1.0"
+  updated_at: "2026-11-05T04:30:20Z"
 ---
 
 # Interactive Planning Doc / 交互式工程计划

@@ -2,7 +2,7 @@
 
 把计划和交接的线索轻轻收好，留给下次开工的自己。这里是 yomihime 的小小工具箱，陪项目一点点完善。
 
-本文介绍技能的公共约定、运行要求和评估结果。当前为 **1.0.0 候选基线**，版本号与本文不构成发布或安装证明；合并状态以 PR #9 的实际记录为准。作者：**yomihime（如月怜） <evenia@evenia.moe>**。技能目录和用途以 [技能目录](./README.md) 为入口，维护规则以 [SKILL_STANDARD.md](./SKILL_STANDARD.md) 为唯一权威；本文件提供导览，并记录指定候选的评估快照。
+本文介绍技能的公共约定、运行要求和评估结果。八个技能从 **1.0.0** 建立独立基线，本次受影响技能按下方版本表递增，其余保持原版本。版本号与本文不构成发布或安装证明；本次合并状态以 PR #10 的实际记录为准。作者：**yomihime（如月怜） <evenia@evenia.moe>**。技能目录和用途以 [技能目录](./README.md) 为入口，维护规则以 [SKILL_STANDARD.md](./SKILL_STANDARD.md) 为唯一权威；本文件提供导览，并记录指定候选的评估快照。
 
 ## 技能集合
 
@@ -74,6 +74,30 @@ skills/
 - 历史候选在 Linux x86_64、Python 3.12.14 和 3.13.5 上的 18 次 CLI 烟测全部通过；历史回归使用 Python 3.12。本机 Windows 的修复回归、跳过与历史失败见下文，不据此承诺完整平台支持。Python 3.8/3.9 与 macOS 仍未实测。
 - planning、multi-agent、memory、UI 四个技能是文档指导，使用时不需要 Python。init 的指导可独立使用；可选 helper 使用 Python 3.10+ 标准库。纯版本值比较不依赖 POSIX，也不读取目录或给出安装决定；完整目录检查另需 POSIX no-follow 文件描述符能力。原生 Windows 的目录检查明确退出码 2、需人工或宿主工具核验，不使用不安全回退；原生 Windows、macOS 与 Python 3.10 最低版本均未实测。浏览器交互需 JavaScript；Node DOM 测试为可选开发验证，不是用户使用文档技能的先决条件。
 - 测试子进程使用最小环境与超时。浏览器测试默认显式启用 Chromium sandbox；只有明确声明的隔离 Linux 容器测试才有受控例外，启动失败不自动降级。
+
+## 版本更新与合并前复核（2026-11-05，基于 90cf943）
+
+按用户最新要求更新实际受影响技能的独立 SemVer；即使此前 1.0.0 尚属未发布候选，本轮也明确递增，而不是忽略版本更新请求。依据仍为 [维护规范](./SKILL_STANDARD.md#基本结构和版本)：兼容能力用 MINOR、兼容修复/规则澄清用 PATCH，没有引入新的强制协议字段或不兼容授权变化。
+
+| 技能 | 原版本 → 本轮版本 | 变更幅度依据 |
+| --- | --- | --- |
+| interactive-planning-doc | 1.0.0 → **1.1.0** | 完整主计划工作流、模板及可交接基线；中英文镜像同步 |
+| development-pipeline | 1.0.0 → **1.1.0** | 主计划接入、修订与剩余范围新 run 的兼容协作流程 |
+| multi-agent-engineering | 1.0.0 → **1.0.1** | 澄清既有失败屏障、角色任务及上下文/权限交接，不改变 task-handoff-v1 |
+| project-memory | 1.0.0 → **1.0.1** | 澄清现有知识摘录、计划引用与已接收事实的维护边界 |
+| auto-style-string-resources | 1.0.0 → **1.0.1** | Windows 路径输出兼容修复及相关回归修正 |
+
+五技能 `metadata.updated_at` 均为 **`2026-11-05T04:30:20Z`**，planning 英文镜像同步。architecture-design、ui-design、yomihime-init 的版本和时间保持原值。本轮版本提交相对 `90cf943ddeea4fa4793a864b9722769635b31ae4` 只改变上述六个入口文件的版本/时间和本 information；没有为评分器 3000 字节限制删规则。
+
+完整回归本轮 **219 项：190 通过、1 失败、0 错误、28 跳过**；三套 Node DOM 检查通过。失败仍为 `ProjectIndexTests.test_concurrent_process_updates_publish_complete_current_index`，在 `test_pipeline_index.py:565` 的 reader 错误列表断言收到临时 `pipeline-index-data.js` 的 `PermissionError(errno=13)`。没有反复重跑至通过，也没有修改断言或运行时代码。此前 main 的相同测试已复现；本轮复核并发写入 helper、流水线运行时代码和索引页面与 main 的对象仍相同。现有证据支持它是既有 Windows 并发问题，最终瞬间句柄机制及修复仍待确认，不能称已解决或全仓通过。
+
+五个受影响技能 quick_validate 全部通过；规划 12 项与仓库 10 项文档契约已包含在上述回归中。另核对 **54 个相对链接**、planning 双语元数据、版本/时间以外技能内容不变，以及未改技能文件指纹。文档/DOM 检查不代表真实浏览器、子 Agent 交接或所有平台验收。
+
+下方 NVIDIA 与 Qwen 结果保留各自真实受测 head、版本、覆盖和用量。本轮版本/时间导致完整目录字节变化，**没有对新版本重跑模型或 NVIDIA**；不能将 `c0d659d` 的报告重新标成新版本的新测成绩。Tier 1 缺失扫描、planning Tier 2 failed / 3 HIGH 和 Tier 3 未运行均保留；3000 字节 rubric 限制不作为删规则或伪造分数的理由。
+
+完整差异及权限边界静态复核未发现新增阻断，独立审查对 `90cf943` 也未报告新增阻断。但本轮仍有上述真实回归失败，且最终独立复核未完成，**本记录不宣告允许合并或已经合并**。按协调要求先提交结果供最终复核，保持 PR draft，等待最终审查结论再决定合并。版本更新不创建 tag、release 或安装，不删除保留分支、用户未跟踪材料或此前被拒绝写入的 artifacts.md。
+
+本机本轮原始回归、校验与版本回执保存在仓库外 `C:/Users/eveni/AppData/Local/Temp/codex-planning-port-20261105-0130/merge-preflight-20261105/`，不随 PR 发布用户材料或凭据。
 
 ## NVIDIA 云端最终评测记录（2026-11-05，c0d659d）
 
