@@ -115,11 +115,31 @@ def frontmatter(text):
     except ValueError as error:
         raise EvidenceError("unterminated frontmatter") from error
     roots, metadata, current, in_block = {}, {}, None, False
+    block_indent, leading_blank_indent = None, 0
     for line in lines[1:end]:
-        if not line.strip() or line.lstrip().startswith("#"):
+        indent = len(line) - len(line.lstrip(" "))
+        if not line.strip():
+            if in_block and block_indent is None:
+                leading_blank_indent = max(leading_blank_indent, indent)
             continue
         if "\t" in line:
             raise EvidenceError("tabs in frontmatter are unsupported")
+        if in_block:
+            # Implicit YAML block indentation comes from the first nonempty
+            # content line. Indented '#' is content, not a YAML comment.
+            if indent and (block_indent is None or indent >= block_indent):
+                if block_indent is None:
+                    if leading_blank_indent > indent:
+                        raise EvidenceError("leading blank line exceeds block indentation")
+                    block_indent = indent
+                continue
+            if indent and not line.lstrip().startswith("#"):
+                raise EvidenceError("invalid block scalar indentation")
+            # A root key or an outdented comment ends the scalar. Subsequent
+            # indented content cannot silently resume it.
+            in_block = False
+        if line.lstrip().startswith("#"):
+            continue
         if line.startswith(" "):
             if current == "metadata":
                 match = KEY.fullmatch(line[2:]) if line.startswith("  ") else None
@@ -137,6 +157,7 @@ def frontmatter(text):
             raise EvidenceError("top-level version is forbidden; use metadata.version only")
         roots[current] = value
         in_block = value in ("|", ">", "|-", ">-", "|+", ">+")
+        block_indent, leading_blank_indent = None, 0
         if current == "metadata" and value is not None:
             raise EvidenceError("metadata must be a plain block mapping")
         if value and value[0] in "&*!{[":

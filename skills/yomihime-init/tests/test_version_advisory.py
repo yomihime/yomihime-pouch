@@ -28,6 +28,41 @@ def skill_text(version='1.0.0', updated_at='2026-11-04T12:24:49Z', name='example
 
 
 class VersionGrammarTests(unittest.TestCase):
+    def test_literal_and_folded_blocks_accept_legal_indentation_and_blank_lines(self):
+        for marker in ('|', '>', '|-', '>-', '|+', '>+'):
+            for width in (1, 2, 4, 8):
+                pad = ' ' * width
+                for body in ('', '\n', pad + 'first',
+                             '\n' + pad + 'first\n\n' + pad + 'last',
+                             pad + '\n' + pad + 'first\n \n' + pad + 'last',
+                             pad + 'first\n' + pad + '  nested\n' + pad + 'last',
+                             pad + '# scalar content\n' + pad + 'last'):
+                    with self.subTest(marker=marker, width=width, body=body):
+                        text = skill_text().replace('description: >-\n  Test skill.',
+                                                    'description: ' + marker + '\n' + body)
+                        self.assertEqual(advisory.frontmatter(text)['version'], '1.0.0')
+
+    def test_block_scalar_rejects_dedents_and_overindented_leading_blanks(self):
+        for marker in ('|', '>', '|-', '>-', '|+', '>+'):
+            for body in ('  first\n last', '    first\n  last',
+                         '  # scalar content\n last',
+                         '    \n  first', '  first\n # outside comment\n  resumed',
+                         '# outside comment\n  resumed'):
+                with self.subTest(marker=marker, body=body):
+                    text = skill_text().replace('description: >-\n  Test skill.',
+                                                'description: ' + marker + '\n' + body)
+                    with self.assertRaises(advisory.EvidenceError):
+                        advisory.frontmatter(text)
+
+    def test_block_scalar_ends_at_root_key_or_outdented_comment(self):
+        for ending in ('', '\n# outside comment', '\n # outside comment'):
+            text = skill_text().replace('  Test skill.', '  Test skill.' + ending)
+            self.assertEqual(advisory.frontmatter(text)['name'], 'example')
+        # A root field must still be checked, never swallowed as scalar text.
+        text = skill_text().replace('metadata:', 'version: "2.0.0"\nmetadata:')
+        with self.assertRaises(advisory.EvidenceError):
+            advisory.frontmatter(text)
+
     def test_integer_comparison_not_text_order(self):
         self.assertGreater(advisory.parse_version('1.10.0'), advisory.parse_version('1.9.9'))
         self.assertGreater(advisory.parse_version('10.0.0'), advisory.parse_version('9.999.999'))
@@ -364,6 +399,22 @@ class AdvisoryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertEqual(json.loads(result.stdout)['decision'], 'unknown')
         self.assertEqual(advisory.inspect_tree(self.local), before)
+
+    def test_cli_malformed_block_is_unknown_for_inspect_and_compare(self):
+        malformed = skill_text().replace('  Test skill.', '  first line\n invalid dedent')
+        (self.local / 'SKILL.md').write_text(malformed)
+        before = (self.local / 'SKILL.md').read_bytes()
+        for args in (['inspect', str(self.local)],
+                     ['compare', '--local', str(self.local), '--candidate', str(self.candidate)],
+                     ['compare', '--local', str(self.candidate), '--candidate', str(self.local)]):
+            with self.subTest(args=args):
+                child = self.processes.run([PYTHON, str(SCRIPT), *args], capture_output=True, text=True)
+                self.assertEqual(child.returncode, 2, child.stderr)
+                result = json.loads(child.stdout)
+                self.assertEqual(result['decision'], 'unknown')
+                self.assertFalse(result['mutated'])
+                self.assertIn('indentation', result['reason'])
+                self.assertEqual((self.local / 'SKILL.md').read_bytes(), before)
 
 
 @unittest.skipUnless(os.name == 'posix' and shutil.which('git'), 'requires read-only Git baseline fixture')
