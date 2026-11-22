@@ -16,6 +16,7 @@
 | 📊 **Git Commit Counter** | 统计 Git 仓库中个人的历史代码提交行数。 | [查看文档](./tools/git-commit-counter/) |
 | 🐱 **NapCat Portable Installer** | 使用系统 QQ 部署可移动的 NapCat Shell 目录。 | [查看文档](./tools/napcat-portable-installer/) |
 | 🎬 **Emby + MetaTube Manager** | Windows 原生 Emby + MetaTube 安装、启动、备份、升级与诊断。 | [查看文档](./tools/emby-metatube-manager/) |
+| 🌐 **New API Gateway** | 在 Windows mini PC 上通过渠道代理访问 OpenAI，向局域网设备提供兼容接口。 | [查看文档](./tools/new-api-gateway/) |
 
 ### AI 技能
 
@@ -37,7 +38,8 @@ yomihime-pouch/
 ├── tools/
 │   ├── git-commit-counter/
 │   ├── napcat-portable-installer/
-│   └── emby-metatube-manager/
+│   ├── emby-metatube-manager/
+│   └── new-api-gateway/
 ├── skills/
 │   ├── auto-style-string-resources/
 │   ├── architecture-design/
